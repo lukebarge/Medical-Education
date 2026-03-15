@@ -7,23 +7,23 @@ const NAV = [
   {
     section: 'Getting Started',
     items: [
-      { label: 'Introduction', href: '/website/index.html', icon: '◎' },
+      { label: 'Introduction', href: '/doc/index.html', icon: '◎' },
     ]
   },
   {
     section: 'Physiology',
     items: [
-      { label: 'Cardiac Cycle',     href: '/website/physiology/heart-beat.html',      icon: '♥' },
-      { label: 'Breathing',         href: '/website/physiology/breathing.html',        icon: '🫁' },
-      { label: 'Blood Flow',        href: '/website/physiology/blood-flow.html',       icon: '⟳' },
-      { label: 'Action Potential',  href: '/website/physiology/action-potential.html', icon: '⚡' },
+      { label: 'Cardiac Cycle',     href: '/doc/physiology/heart-beat.html',      icon: '♥' },
+      { label: 'Breathing',         href: '/doc/physiology/breathing.html',        icon: '🫁' },
+      { label: 'Blood Flow',        href: '/doc/physiology/blood-flow.html',       icon: '⟳' },
+      { label: 'Action Potential',  href: '/doc/physiology/action-potential.html', icon: '⚡' },
     ]
   },
   {
     section: 'Pharmacology',
     items: [
-      { label: 'Drug Absorption',    href: '/website/pharmacology/drug-absorption.html',  icon: '◈' },
-      { label: 'Pharmacokinetics',   href: '/website/pharmacology/pharmacokinetics.html', icon: '≈' },
+      { label: 'Drug Absorption',    href: '/doc/pharmacology/drug-absorption.html',  icon: '◈' },
+      { label: 'Pharmacokinetics',   href: '/doc/pharmacology/pharmacokinetics.html', icon: '≈' },
     ]
   }
 ];
