@@ -2,7 +2,7 @@
 
 A general-purpose 2D Canvas animation library with interactive UI controls. Ships with medical education examples covering physiology, pharmacology, and anatomy.
 
-**[Live Documentation](https://lukebarge.github.io/Medical-Education/docs/)**
+**[Live Documentation](https://lukebarge.github.io/Medical-Education/)**
 
 ## Features
 
