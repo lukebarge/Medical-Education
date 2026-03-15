@@ -48,28 +48,35 @@
 
       <!-- Hero -->
       <section class="home-hero">
-        <div class="home-badge">
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><circle cx="5" cy="5" r="5"/></svg>
-          Interactive · Open Source
-        </div>
-        <h1 class="home-title">
-          Medical Education<br/>
-          <em>through Animation</em>
-        </h1>
-        <p class="home-desc">
-          Explore the human body through interactive 2D simulations. Adjust parameters
-          in real time and observe how physiology and pharmacology respond.
-        </p>
-        <div class="home-cta">
-          <a href="physiology/heart-beat.html" class="btn btn-primary">
-            Start with Cardiac Cycle →
-          </a>
-          <a href="wiki/index.html" class="btn" style="margin-top:8px;">
-            Library Wiki →
-          </a>
-          <a href="https://github.com/lukebarge/Medical-Education" class="btn btn-secondary" target="_blank" rel="noopener">
-            View on GitHub
-          </a>
+        <div class="home-hero-inner">
+          <div class="home-hero-text">
+            <div class="home-badge">
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><circle cx="5" cy="5" r="5"/></svg>
+              Interactive · Open Source
+            </div>
+            <h1 class="home-title">
+              Medical Education<br/>
+              <em>through Animation</em>
+            </h1>
+            <p class="home-desc">
+              Explore the human body through interactive 2D simulations. Adjust parameters
+              in real time and observe how physiology and pharmacology respond.
+            </p>
+            <div class="home-cta">
+              <a href="physiology/heart-beat.html" class="btn btn-primary">
+                Start with Cardiac Cycle →
+              </a>
+              <a href="wiki/index.html" class="btn" style="margin-top:8px;">
+                Library Wiki →
+              </a>
+              <a href="https://github.com/lukebarge/Medical-Education" class="btn btn-secondary" target="_blank" rel="noopener">
+                View on GitHub
+              </a>
+            </div>
+          </div>
+          <div class="home-hero-visual">
+            <canvas id="hero-heart"></canvas>
+          </div>
         </div>
       </section>
 
@@ -153,5 +160,183 @@
   </div>
 
   <script src="assets/app.js"></script>
+  <script>
+  (function () {
+    var canvas = document.getElementById('hero-heart');
+    if (!canvas || !canvas.getContext) return;
+    var ctx = canvas.getContext('2d');
+
+    var dpr = window.devicePixelRatio || 1;
+    var W = 260, H = 310;
+    canvas.width  = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width  = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.scale(dpr, dpr);
+
+    // Colours matching the flat cartoon illustration
+    var RED  = '#C8472A';
+    var BLUE = '#5A9BC5';
+    var DARK = '#2D0808';
+    var LW   = 4;
+    var CX   = 128, CY = 168;
+
+    /* Draw a rounded rectangle path (no fill/stroke) */
+    function rr(x, y, w, h, r) {
+      r = Math.min(r, w / 2, h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.arcTo(x + w, y,     x + w, y + r,     r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+      ctx.lineTo(x + r, y + h);
+      ctx.arcTo(x,     y + h, x,     y + h - r, r);
+      ctx.lineTo(x, y + r);
+      ctx.arcTo(x, y,         x + r, y,          r);
+      ctx.closePath();
+    }
+
+    /* Filled + outlined vessel rectangle */
+    function vessel(x, y, w, h, r, color) {
+      rr(x, y, w, h, r);
+      ctx.fillStyle   = color;
+      ctx.fill();
+      ctx.strokeStyle = DARK;
+      ctx.lineWidth   = LW;
+      ctx.stroke();
+    }
+
+    function drawScene(scale) {
+      ctx.clearRect(0, 0, W, H);
+      ctx.save();
+      ctx.translate(CX, CY);
+      ctx.scale(scale, scale);
+      ctx.lineJoin = 'round';
+      ctx.lineCap  = 'round';
+
+      /* ---- BACK LAYER: blue vessels behind the heart body ---- */
+      // Superior vena cava  (left side, going up)
+      vessel(-83, -148, 24, 68,  5, BLUE);
+      // Inferior vena cava  (left side, going down)
+      vessel(-83,   82, 24, 50,  5, BLUE);
+      // Pulmonary artery    (top right, going right)
+      vessel( 20, -100, 82, 24,  5, BLUE);
+
+      /* ---- HEART BODY ---- */
+      ctx.beginPath();
+      ctx.moveTo(-8, -80);
+      // Upper-left shoulder / left lobe
+      ctx.bezierCurveTo(-26, -93, -66, -88, -76, -65);
+      // Left side down
+      ctx.bezierCurveTo(-87, -44, -87, -6, -87, 12);
+      // Lower-left to apex
+      ctx.bezierCurveTo(-87,  50, -50,  90,   0, 98);
+      // Lower-right from apex
+      ctx.bezierCurveTo( 50,  90,  87,  50,  87, 12);
+      // Right side up
+      ctx.bezierCurveTo( 87,  -6,  87, -44,  76, -65);
+      // Upper-right shoulder / right lobe
+      ctx.bezierCurveTo( 66, -88,  26, -93,   8, -80);
+      // Subtle top notch back to start
+      ctx.bezierCurveTo(  3, -76,  -3, -76,  -8, -80);
+      ctx.closePath();
+      ctx.fillStyle   = RED;
+      ctx.fill();
+      ctx.strokeStyle = DARK;
+      ctx.lineWidth   = LW;
+      ctx.stroke();
+
+      /* ---- FRONT LAYER: aortic arch (red) at top centre ---- */
+      vessel(-16, -130, 32, 52, 6, RED);   // ascending aorta stem
+      vessel(-26, -162, 18, 35, 5, RED);   // branch 1 (left)
+      vessel( -5, -156, 18, 29, 5, RED);   // branch 2 (centre)
+      vessel( 15, -149, 18, 24, 5, RED);   // branch 3 (right)
+
+      /* ---- PULMONARY VEINS – 3 red stubs on the right ---- */
+      vessel(80, -36, 38, 16, 4, RED);
+      vessel(80,  -8, 38, 16, 4, RED);
+      vessel(80,  20, 38, 16, 4, RED);
+
+      /* ---- CORONARY VESSELS ---- */
+      ctx.strokeStyle = DARK;
+      ctx.lineCap     = 'round';
+      ctx.lineJoin    = 'round';
+
+      // Left anterior descending artery (LAD)
+      ctx.lineWidth = 2.8;
+      ctx.beginPath();
+      ctx.moveTo(-5, -5);
+      ctx.bezierCurveTo(-8, 22, -12, 52, -5, 85);
+      ctx.stroke();
+
+      // Circumflex artery (left, along AV groove)
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(-5, -5);
+      ctx.bezierCurveTo(-18, 6, -44, 12, -65, 28);
+      ctx.stroke();
+
+      // Right coronary artery
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(28, 8);
+      ctx.bezierCurveTo(52, 18, 68, 40, 62, 62);
+      ctx.stroke();
+
+      // Diagonal branches off LAD
+      ctx.lineWidth = 1.8;
+      var ladBranches = [
+        [-5, 18, -24, 30],
+        [-6, 36, -22, 46],
+        [-5, 55, -18, 64],
+        [-5, 70, -14, 77]
+      ];
+      for (var i = 0; i < ladBranches.length; i++) {
+        var b = ladBranches[i];
+        ctx.beginPath();
+        ctx.moveTo(b[0], b[1]);
+        ctx.lineTo(b[2], b[3]);
+        ctx.stroke();
+      }
+
+      // Small branches off circumflex
+      ctx.lineWidth = 1.6;
+      var cxBranches = [
+        [-28,  9, -36, 22],
+        [-48, 16, -55, 28]
+      ];
+      for (var j = 0; j < cxBranches.length; j++) {
+        var c = cxBranches[j];
+        ctx.beginPath();
+        ctx.moveTo(c[0], c[1]);
+        ctx.lineTo(c[2], c[3]);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
+    /* Animation loop – 72 BPM cardiac cycle */
+    var t0       = null;
+    var BEAT_MS  = 60000 / 72;
+
+    function frame(ts) {
+      if (!t0) t0 = ts;
+      var phase = ((ts - t0) % BEAT_MS) / BEAT_MS;
+      // Quick systolic expansion, slower diastolic relaxation
+      var scale = 1;
+      if (phase < 0.14) {
+        scale = 1 + (phase / 0.14) * 0.055;
+      } else if (phase < 0.32) {
+        scale = 1.055 - ((phase - 0.14) / 0.18) * 0.055;
+      }
+      drawScene(scale);
+      requestAnimationFrame(frame);
+    }
+
+    requestAnimationFrame(frame);
+  })();
+  </script>
 </body>
 </html>
