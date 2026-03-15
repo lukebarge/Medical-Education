@@ -6,9 +6,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "site": "vite --open /doc/index.html",
+    "site": "vite --open /docs/index.html",
     "build": "vite build",
-    "build:site": "vite build --config doc.vite.config.js",
+    "build:site": "vite build --config docs.vite.config.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "coverage": "vitest run --coverage"
