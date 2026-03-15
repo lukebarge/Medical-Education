@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Heart Beat Demo — anim2d</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { display: flex; flex-direction: column; align-items: center; background: #1a1a2e; color: #eee; font-family: system-ui, sans-serif; min-height: 100vh; padding: 20px; }
+    h1 { font-size: 20px; margin-bottom: 16px; color: #ff8888; }
+    .layout { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; justify-content: center; }
+    canvas { border-radius: 8px; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+    #controls { min-width: 220px; }
+  </style>
+</head>
+<body>
+  <h1>Cardiac Cycle Simulation</h1>
+  <div class="layout">
+    <canvas id="canvas"></canvas>
+    <div id="controls"></div>
+  </div>
+
+  <script type="module">
+    import { Canvas, Scene } from '../../src/core/Canvas.js';
+    import { HeartBeat } from '../../src/examples/HeartBeat.js';
+    import { ControlPanel } from '../../src/controls/ControlPanel.js';
+    import { Slider } from '../../src/controls/Slider.js';
+    import { NumberInput } from '../../src/controls/NumberInput.js';
+    import { Toggle } from '../../src/controls/Toggle.js';
+    import { Button } from '../../src/controls/Button.js';
+    import { Scene as AnimScene } from '../../src/core/Scene.js';
+
+    // Setup
+    const canvas = new Canvas('#canvas', { width: 500, height: 460 });
+    const scene = new AnimScene(canvas);
+
+    // Heart animation
+    const heart = new HeartBeat(canvas, { bpm: 72, sarcomereLength: 2.2 });
+    heart.on('systole', () => statusEl.textContent = 'Systole (contraction)');
+    heart.on('diastole', () => statusEl.textContent = 'Diastole (relaxation)');
+
+    scene.add(heart);
+    heart.play();
+    scene.start();
+
+    // Status display
+    const statusEl = document.createElement('div');
+    statusEl.style.cssText = 'text-align:center;margin-top:10px;font-size:14px;color:#aaa;';
+    statusEl.textContent = 'Running...';
+    document.querySelector('.layout').insertAdjacentElement('beforebegin', statusEl);
+
+    // Controls
+    const panel = new ControlPanel('#controls', { title: 'Cardiac Parameters', theme: 'dark' });
+
+    panel.add(new Slider({
+      label: 'Heart Rate',
+      min: 30, max: 200, step: 1, value: 72, unit: 'bpm',
+      onChange: v => heart.setBPM(v)
+    }));
+
+    panel.add(new NumberInput({
+      label: 'Sarcomere Length',
+      value: 2.2, min: 1.6, max: 2.6, step: 0.01, unit: 'μm',
+      onChange: v => heart.setSarcomereLength(v)
+    }));
+
+    panel.add(new Slider({
+      label: 'Contractility',
+      min: 0.1, max: 1.0, step: 0.05, value: 0.7,
+      onChange: v => heart.setContractility(v)
+    }));
+
+    panel.add(new Toggle({
+      label: 'Show Labels',
+      value: true,
+      onChange: v => heart.showLabels(v)
+    }));
+
+    panel.add(new Button({
+      label: 'Trigger Arrhythmia',
+      onClick: () => {
+        statusEl.textContent = '⚠️ Arrhythmia triggered!';
+        heart.triggerArrhythmia();
+        setTimeout(() => statusEl.textContent = 'Running...', 3500);
+      }
+    }));
+
+    panel.add(new Button({
+      label: 'Pause / Resume',
+      onClick: () => heart._running ? heart.pause() : heart.play()
+    }));
+
+    panel.mount();
+  </script>
+</body>
+</html>

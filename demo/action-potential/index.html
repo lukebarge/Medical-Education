@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Action Potential Demo — anim2d</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { display: flex; flex-direction: column; align-items: center; background: #111; color: #eee; font-family: system-ui, sans-serif; min-height: 100vh; padding: 20px; }
+    h1 { font-size: 20px; margin-bottom: 16px; color: #00ff88; }
+    .layout { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; justify-content: center; }
+    canvas { border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.8); }
+  </style>
+</head>
+<body>
+  <h1>Nerve Action Potential</h1>
+  <div class="layout">
+    <canvas id="canvas"></canvas>
+    <div id="controls"></div>
+  </div>
+
+  <script type="module">
+    import { Canvas } from '../../src/core/Canvas.js';
+    import { Scene } from '../../src/core/Scene.js';
+    import { ActionPotential } from '../../src/examples/ActionPotential.js';
+    import { ControlPanel } from '../../src/controls/ControlPanel.js';
+    import { Slider } from '../../src/controls/Slider.js';
+    import { NumberInput } from '../../src/controls/NumberInput.js';
+    import { Toggle } from '../../src/controls/Toggle.js';
+    import { Button } from '../../src/controls/Button.js';
+
+    const canvas = new Canvas('#canvas', { width: 620, height: 420 });
+    const scene = new Scene(canvas);
+
+    const ap = new ActionPotential(canvas, {
+      threshold: -55,
+      conductionVelocity: 1,
+      autoFire: true,
+      autoFireInterval: 1500
+    });
+    scene.add(ap);
+    ap.play();
+    scene.start();
+
+    const panel = new ControlPanel('#controls', { title: 'Nerve Parameters', theme: 'dark' });
+
+    panel.add(new NumberInput({
+      label: 'Threshold',
+      value: -55, min: -80, max: -40, step: 1, unit: 'mV',
+      onChange: v => ap.setThreshold(v)
+    }));
+
+    panel.add(new Slider({
+      label: 'Conduction Velocity',
+      min: 0.2, max: 3.0, step: 0.1, value: 1.0, unit: '×',
+      onChange: v => ap.setConductionVelocity(v)
+    }));
+
+    panel.add(new Slider({
+      label: 'Refractory Period',
+      min: 0.5, max: 10, step: 0.5, value: 2, unit: 'ms',
+      onChange: v => ap.setRefractoryPeriod(v)
+    }));
+
+    panel.add(new Toggle({
+      label: 'Show Labels',
+      value: true,
+      onChange: v => ap.showLabels(v)
+    }));
+
+    panel.add(new Button({
+      label: 'Trigger Impulse',
+      onClick: () => ap.trigger()
+    }));
+
+    panel.mount();
+  </script>
+</body>
+</html>

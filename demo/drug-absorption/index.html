@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Drug Absorption & PK Demo — anim2d</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { display: flex; flex-direction: column; align-items: center; background: #f0f4f8; color: #333; font-family: system-ui, sans-serif; min-height: 100vh; padding: 20px; gap: 16px; }
+    h1 { font-size: 20px; color: #2244aa; }
+    .tabs { display: flex; gap: 8px; }
+    .tab { padding: 6px 18px; border-radius: 20px; border: 1px solid #aac; background: #fff; cursor: pointer; font-size: 13px; }
+    .tab.active { background: #2244aa; color: #fff; border-color: #2244aa; }
+    .layout { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; justify-content: center; }
+    canvas { border-radius: 8px; background: #fff; box-shadow: 0 2px 12px rgba(0,0,0,0.15); }
+  </style>
+</head>
+<body>
+  <h1>Drug Absorption &amp; Pharmacokinetics</h1>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="absorption">Absorption Pathway</button>
+    <button class="tab" data-tab="pk">PK Curve</button>
+  </div>
+
+  <div class="layout">
+    <canvas id="canvas"></canvas>
+    <div id="controls"></div>
+  </div>
+
+  <script type="module">
+    import { Canvas } from '../../src/core/Canvas.js';
+    import { Scene } from '../../src/core/Scene.js';
+    import { DrugAbsorption } from '../../src/examples/DrugAbsorption.js';
+    import { Pharmacokinetics } from '../../src/examples/Pharmacokinetics.js';
+    import { ControlPanel } from '../../src/controls/ControlPanel.js';
+    import { Slider } from '../../src/controls/Slider.js';
+    import { NumberInput } from '../../src/controls/NumberInput.js';
+    import { Button } from '../../src/controls/Button.js';
+
+    const canvas = new Canvas('#canvas', { width: 580, height: 420 });
+    let scene = new Scene(canvas);
+    let currentAnim = null;
+    let currentPanel = null;
+
+    function clearControls() {
+      document.getElementById('controls').innerHTML = '';
+    }
+
+    function showAbsorption() {
+      scene.stop();
+      clearControls();
+
+      scene = new Scene(canvas);
+      const da = new DrugAbsorption(canvas, { route: 'oral', dose: 500, absorptionRate: 1.0 });
+      currentAnim = da;
+
+      scene.add(da);
+      da.play();
+      scene.start();
+
+      const panel = new ControlPanel('#controls', { title: 'Absorption Parameters' });
+
+      panel.add(new NumberInput({
+        label: 'Dose', value: 500, min: 10, max: 2000, step: 10, unit: 'mg',
+        onChange: v => da.setDose(v)
+      }));
+
+      panel.add(new Slider({
+        label: 'Absorption Rate',
+        min: 0.1, max: 2.0, step: 0.1, value: 1.0, unit: '×',
+        onChange: v => da.setAbsorptionRate(v)
+      }));
+
+      // Route selector buttons
+      for (const route of ['oral', 'IV', 'sublingual']) {
+        panel.add(new Button({
+          label: `Route: ${route.toUpperCase()}`,
+          onClick: () => da.setRoute(route)
+        }));
+      }
+
+      panel.mount();
+    }
+
+    function showPK() {
+      scene.stop();
+      clearControls();
+
+      scene = new Scene(canvas);
+      const pk = new Pharmacokinetics(canvas, {
+        Cmax: 100, tmax: 1, halfLife: 4, Vd: 30, playSpeed: 1
+      });
+      currentAnim = pk;
+
+      scene.add(pk);
+      pk.play();
+      scene.start();
+
+      const panel = new ControlPanel('#controls', { title: 'PK Parameters' });
+
+      panel.add(new NumberInput({
+        label: 'Cmax', value: 100, min: 1, max: 500, step: 5, unit: 'mg/L',
+        onChange: v => { pk.setCmax(v); }
+      }));
+
+      panel.add(new Slider({
+        label: 'Half-Life',
+        min: 0.5, max: 12, step: 0.5, value: 4, unit: 'h',
+        onChange: v => { pk.setHalfLife(v); }
+      }));
+
+      panel.add(new NumberInput({
+        label: 'Tmax', value: 1, min: 0.1, max: 6, step: 0.1, unit: 'h',
+        onChange: v => { pk.setTmax(v); }
+      }));
+
+      panel.add(new NumberInput({
+        label: 'Volume of Distribution', value: 30, min: 1, max: 200, step: 1, unit: 'L',
+        onChange: v => pk.setVd(v)
+      }));
+
+      panel.add(new Button({
+        label: 'Restart Simulation',
+        onClick: () => { pk.reset(); pk.play(); }
+      }));
+
+      panel.mount();
+    }
+
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        if (tab.dataset.tab === 'absorption') showAbsorption();
+        else showPK();
+      });
+    });
+
+    // Initial load
+    showAbsorption();
+  </script>
+</body>
+</html>

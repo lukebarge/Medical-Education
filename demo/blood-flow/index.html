@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blood Flow Demo — anim2d</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { display: flex; flex-direction: column; align-items: center; background: #1a1a2e; color: #eee; font-family: system-ui, sans-serif; min-height: 100vh; padding: 20px; }
+    h1 { font-size: 20px; margin-bottom: 16px; color: #ff8888; }
+    .layout { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; justify-content: center; }
+    canvas { border-radius: 8px; background: #f8f8f8; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+  </style>
+</head>
+<body>
+  <h1>Blood Flow Simulation</h1>
+  <div class="layout">
+    <canvas id="canvas"></canvas>
+    <div id="controls"></div>
+  </div>
+
+  <script type="module">
+    import { Canvas } from '../../src/core/Canvas.js';
+    import { Scene } from '../../src/core/Scene.js';
+    import { BloodFlow } from '../../src/examples/BloodFlow.js';
+    import { ControlPanel } from '../../src/controls/ControlPanel.js';
+    import { Slider } from '../../src/controls/Slider.js';
+    import { Toggle } from '../../src/controls/Toggle.js';
+
+    const canvas = new Canvas('#canvas', { width: 560, height: 460 });
+    const scene = new Scene(canvas);
+
+    const flow = new BloodFlow(canvas, { vascularResistance: 1.0, pressure: 120 });
+    scene.add(flow);
+    flow.play();
+    scene.start();
+
+    const panel = new ControlPanel('#controls', { title: 'Hemodynamic Parameters', theme: 'dark' });
+
+    panel.add(new Slider({
+      label: 'Vascular Resistance',
+      min: 0.1, max: 3.0, step: 0.1, value: 1.0, unit: 'PRU',
+      onChange: v => flow.setVascularResistance(v)
+    }));
+
+    panel.add(new Slider({
+      label: 'Blood Pressure',
+      min: 60, max: 200, step: 5, value: 120, unit: 'mmHg',
+      onChange: v => flow.setPressure(v)
+    }));
+
+    panel.add(new Slider({
+      label: 'Blood Viscosity',
+      min: 0.5, max: 3.0, step: 0.1, value: 1.0,
+      onChange: v => flow.setViscosity(v)
+    }));
+
+    panel.add(new Toggle({
+      label: 'Show Labels',
+      value: true,
+      onChange: v => flow.showLabels(v)
+    }));
+
+    panel.mount();
+  </script>
+</body>
+</html>
