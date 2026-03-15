@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Breathing — Medical Education</title>
+  <meta name="description" content="Interactive simulation of the respiratory cycle. Explore breathing rate, tidal volume, and airway resistance." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/website/assets/style.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <a href="/website/index.html" class="header-logo">
+      <div class="header-logo-mark">M</div>
+      <div><div class="header-logo-text">MedEdu</div></div>
+    </a>
+    <nav class="header-nav">
+      <a href="/website/index.html">Home</a>
+      <a href="https://github.com/lukebarge/Medical-Education" class="btn-github" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+    </nav>
+    <button class="hamburger" aria-label="Toggle navigation">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+  </header>
+
+  <div class="sidebar-overlay"></div>
+
+  <div class="layout">
+    <aside class="sidebar"></aside>
+
+    <main class="content">
+      <div class="content-inner">
+
+        <nav class="breadcrumb">
+          <a href="/website/index.html">Home</a>
+          <span class="breadcrumb-sep">/</span>
+          <a href="#">Physiology</a>
+          <span class="breadcrumb-sep">/</span>
+          <span>Breathing</span>
+        </nav>
+
+        <h1 class="page-title">Breathing</h1>
+        <p class="page-subtitle">
+          The rhythmic expansion and contraction of the lungs that exchanges oxygen and
+          carbon dioxide between blood and the atmosphere.
+        </p>
+
+        <div class="demo-container">
+          <div class="demo-header">
+            <span class="demo-title">
+              <span class="demo-dot"></span>
+              breathing.js — live simulation
+            </span>
+          </div>
+          <div class="demo-body">
+            <canvas id="canvas"></canvas>
+            <div class="demo-controls">
+              <div id="controls"></div>
+            </div>
+          </div>
+        </div>
+
+        <h2 id="overview">Overview</h2>
+        <p>
+          Normal quiet breathing — <strong>eupnea</strong> — involves the diaphragm descending
+          and the thoracic cage expanding to create a slightly negative intrathoracic pressure.
+          Air then flows in passively along the pressure gradient. Expiration at rest is largely
+          passive, driven by the elastic recoil of lung tissue.
+        </p>
+        <p>
+          At rest, an adult takes <strong>12–20 breaths per minute</strong> with a tidal volume
+          of approximately <strong>500 mL</strong>. This gives a minute ventilation of
+          roughly 6–10 L/min.
+        </p>
+
+        <div class="callout callout--warning">
+          <span class="callout-icon">⚠️</span>
+          <div class="callout-body">
+            <strong>Airway resistance and Poiseuille's Law</strong>
+            Resistance to airflow varies with the fourth power of radius. Halving airway
+            diameter increases resistance 16-fold. Drag the <em>Airway Resistance</em> slider
+            to simulate bronchospasm as seen in asthma or COPD.
+          </div>
+        </div>
+
+        <h2 id="mechanics">Mechanics of Breathing</h2>
+        <div class="cards">
+          <div class="card">
+            <div class="card-icon">⬇️</div>
+            <div class="card-title">Inspiration</div>
+            <div class="card-desc">Diaphragm and external intercostals contract, increasing thoracic volume and lowering alveolar pressure below atmospheric.</div>
+          </div>
+          <div class="card">
+            <div class="card-icon">⬆️</div>
+            <div class="card-title">Expiration</div>
+            <div class="card-desc">At rest, passive. Recoil of stretched lung tissue restores thoracic volume. Active during exercise or airway obstruction.</div>
+          </div>
+          <div class="card">
+            <div class="card-icon">💨</div>
+            <div class="card-title">Compliance</div>
+            <div class="card-desc">The ease with which lungs expand. Reduced in fibrosis; increased in emphysema where alveolar walls are destroyed.</div>
+          </div>
+        </div>
+
+        <h2 id="parameters">Parameters</h2>
+        <table class="param-table">
+          <thead>
+            <tr><th>Parameter</th><th>Normal Range</th><th>What it changes</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Respiratory Rate</td>
+              <td>12 – 20 /min</td>
+              <td>Cycle speed. Tachypnoea (&gt;20) reduces time for each breath; bradypnoea (&lt;12) may signal CNS depression.</td>
+            </tr>
+            <tr>
+              <td>Tidal Volume</td>
+              <td>0.4 – 0.6 (relative)</td>
+              <td>Volume per breath. Reduced in restrictive disease; increased in metabolic acidosis (Kussmaul breathing).</td>
+            </tr>
+            <tr>
+              <td>Airway Resistance</td>
+              <td>0.1 – 0.4</td>
+              <td>Opposition to airflow. High resistance slows both inspiration and expiration — characteristic of obstructive diseases.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2 id="clinical">Clinical Relevance</h2>
+        <p>
+          <strong>Asthma</strong> increases airway resistance through bronchospasm, inflammation,
+          and mucus. Expiration becomes effortful and prolonged. <strong>COPD</strong> combines
+          airway obstruction with loss of elastic recoil, causing air trapping and hyperinflation.
+        </p>
+        <p>
+          <strong>Pulmonary fibrosis</strong> reduces lung compliance, so greater muscular effort
+          is required to achieve the same tidal volume — reflected as rapid, shallow breathing.
+          Try setting a high airway resistance and low tidal volume to simulate an obstructive
+          breathing pattern.
+        </p>
+
+        <nav class="page-nav">
+          <a href="/website/physiology/heart-beat.html" class="page-nav-item page-nav-item--prev">
+            <span class="page-nav-label">Previous</span>
+            <span class="page-nav-title">Cardiac Cycle</span>
+          </a>
+          <a href="/website/physiology/blood-flow.html" class="page-nav-item page-nav-item--next">
+            <span class="page-nav-label">Next</span>
+            <span class="page-nav-title">Blood Flow</span>
+          </a>
+        </nav>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="/website/assets/app.js"></script>
+  <script type="module">
+    import { Canvas } from '/src/core/Canvas.js';
+    import { Scene } from '/src/core/Scene.js';
+    import { Breathing } from '/src/examples/Breathing.js';
+    import { ControlPanel } from '/src/controls/ControlPanel.js';
+    import { Slider } from '/src/controls/Slider.js';
+    import { Toggle } from '/src/controls/Toggle.js';
+
+    const canvas = new Canvas('#canvas', { width: 440, height: 400 });
+    const scene = new Scene(canvas);
+
+    const breath = new Breathing(canvas, { rate: 14, tidalVolume: 0.5, airwayResistance: 0.3 });
+    scene.add(breath);
+    breath.play();
+    scene.start();
+
+    const panel = new ControlPanel('#controls', { title: 'Respiratory Parameters', theme: 'dark' });
+
+    panel.add(new Slider({
+      label: 'Respiratory Rate', min: 4, max: 40, step: 1, value: 14, unit: '/min',
+      onChange: v => breath.setRate(v)
+    }));
+    panel.add(new Slider({
+      label: 'Tidal Volume', min: 0.1, max: 1.0, step: 0.05, value: 0.5,
+      onChange: v => breath.setTidalVolume(v)
+    }));
+    panel.add(new Slider({
+      label: 'Airway Resistance', min: 0.0, max: 0.95, step: 0.05, value: 0.3,
+      onChange: v => breath.setAirwayResistance(v)
+    }));
+    panel.add(new Toggle({
+      label: 'Show Labels', value: true,
+      onChange: v => breath.showLabels(v)
+    }));
+
+    panel.mount();
+  </script>
+</body>
+</html>
