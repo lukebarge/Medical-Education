@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vascular Resistance — Medical Education</title>
+  <meta name="description" content="Physics simulation of the heart pumping against systemic vascular resistance. Explore how SVR, heart rate, contractility, and preload govern cardiac output and blood pressure." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <a href="../index.html" class="header-logo">
+      <div class="header-logo-mark">M</div>
+      <div><div class="header-logo-text">MedEdu</div></div>
+    </a>
+    <nav class="header-nav">
+      <a href="../index.html">Home</a>
+      <a href="https://github.com/lukebarge/Medical-Education" class="btn-github" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+    </nav>
+    <button class="hamburger" aria-label="Toggle navigation">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+  </header>
+
+  <div class="sidebar-overlay"></div>
+
+  <div class="layout">
+    <aside class="sidebar"></aside>
+
+    <main class="content">
+      <div class="content-inner">
+
+        <nav class="breadcrumb">
+          <a href="../index.html">Home</a>
+          <span class="breadcrumb-sep">/</span>
+          <a href="#">Physiology</a>
+          <span class="breadcrumb-sep">/</span>
+          <span>Vascular Resistance</span>
+        </nav>
+
+        <h1 class="page-title">Vascular Resistance &amp; Cardiac Output</h1>
+        <p class="page-subtitle">
+          A physics simulation of the left ventricle pumping blood against systemic
+          vascular resistance — linking Ohm's law, Frank–Starling mechanics, and
+          Poiseuille's law into one interactive model.
+        </p>
+
+        <!-- Interactive Demo -->
+        <div class="demo-container">
+          <div class="demo-header">
+            <span class="demo-title">
+              <span class="demo-dot"></span>
+              vascular-resistance.js — live simulation
+            </span>
+          </div>
+          <div class="demo-body">
+            <canvas id="canvas"></canvas>
+            <div class="demo-controls">
+              <div id="controls"></div>
+            </div>
+          </div>
+        </div>
+
+        <h2 id="overview">Overview</h2>
+        <p>
+          The cardiovascular system obeys the same Ohm's law analogy that governs
+          electrical circuits: <strong>MAP = CO × SVR</strong>, where mean arterial
+          pressure (MAP) is the product of cardiac output (CO) and systemic vascular
+          resistance (SVR). Raise resistance without a compensatory increase in heart
+          rate or contractility, and pressure climbs — the hallmark of hypertension.
+        </p>
+        <p>
+          The simulation models pulsatile flow, showing how the left ventricle
+          generates an aortic pressure waveform with each beat. Blood particles
+          (red = arterial, blue = venous) flow at a rate proportional to cardiac
+          output, while the arteriole width reflects Poiseuille's law:
+          resistance scales with the <strong>fourth power</strong> of vessel radius,
+          so even small changes in arteriolar tone produce dramatic effects on flow.
+        </p>
+
+        <div class="callout callout--info">
+          <span class="callout-icon">ℹ️</span>
+          <div class="callout-body">
+            <strong>Frank–Starling &amp; afterload</strong>
+            Increasing SVR raises the <em>afterload</em> against which the left
+            ventricle must eject. According to Frank–Starling mechanics, a higher
+            afterload reduces stroke volume — watch the SV readout fall as you
+            increase SVR. The heart compensates partly via reflex tachycardia
+            (increase HR) to maintain cardiac output.
+          </div>
+        </div>
+
+        <h2 id="physics">Physics Model</h2>
+
+        <div class="cards">
+          <div class="card">
+            <div class="card-icon">⚡</div>
+            <div class="card-title">Ohm's Law Analogy</div>
+            <div class="card-desc">MAP = CO × SVR. Pressure difference drives flow; resistance opposes it. Identical in form to V = I × R.</div>
+          </div>
+          <div class="card">
+            <div class="card-icon">🩸</div>
+            <div class="card-title">Poiseuille's Law</div>
+            <div class="card-desc">R = 8ηL / πr⁴. Halving arteriole radius increases resistance 16-fold. The simulation narrows vessels visually as SVR rises.</div>
+          </div>
+          <div class="card">
+            <div class="card-icon">📈</div>
+            <div class="card-title">Frank–Starling</div>
+            <div class="card-desc">Higher afterload (SVR) reduces stroke volume. The model: SV = EDV × EF × [1 / (0.7 + 0.3 × SVR)].</div>
+          </div>
+          <div class="card">
+            <div class="card-icon">🌊</div>
+            <div class="card-title">Aortic Pressure Waveform</div>
+            <div class="card-desc">Systole generates a rapid pressure rise to SBP. Diastolic runoff decays exponentially toward DBP via aortic compliance.</div>
+          </div>
+        </div>
+
+        <h2 id="parameters">Parameters</h2>
+        <table class="param-table">
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Normal Range</th>
+              <th>Effect</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>SVR (Vascular Resistance)</td>
+              <td>×0.5 – ×3.0</td>
+              <td>Controls arteriole tone. ↑SVR → ↑MAP, ↓SV, narrower arterioles. Mimics vasoconstrictors, hypertension.</td>
+            </tr>
+            <tr>
+              <td>Heart Rate</td>
+              <td>40 – 150 bpm</td>
+              <td>↑HR compensates for ↓SV to maintain CO = HR × SV. Tachycardia is a baroreflex response to low MAP.</td>
+            </tr>
+            <tr>
+              <td>Contractility</td>
+              <td>0.3 – 2.0</td>
+              <td>Inotropic state. ↑Contractility → ↑EF → ↑SV → ↑CO → ↑MAP. Mimics catecholamines or inotropes.</td>
+            </tr>
+            <tr>
+              <td>Preload</td>
+              <td>0.5 – 1.8</td>
+              <td>End-diastolic volume. ↑Preload → ↑EDV → ↑SV (Frank–Starling length-tension effect).</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2 id="clinical">Clinical Scenarios</h2>
+        <p>
+          Use the sliders to recreate common haemodynamic states:
+        </p>
+        <ul>
+          <li><strong>Hypertension:</strong> SVR ×2–3, normal CO — MAP rises, pulse pressure widens.</li>
+          <li><strong>Cardiogenic shock:</strong> ↓Contractility → ↓SV → ↓CO → ↓MAP. Baroreflex: ↑HR tries to compensate.</li>
+          <li><strong>Septic shock (distributive):</strong> SVR ×0.3–0.5, ↑HR — low MAP despite preserved or elevated CO.</li>
+          <li><strong>Vasodilator therapy:</strong> ↓SVR → afterload relief → ↑SV (useful in heart failure).</li>
+          <li><strong>Exercise:</strong> ↑HR + ↑Contractility + mild ↓SVR → large ↑CO, modest ↑MAP.</li>
+        </ul>
+
+        <!-- Page navigation -->
+        <nav class="page-nav">
+          <a href="./blood-flow.html" class="page-nav-item page-nav-item--prev">
+            <span class="page-nav-label">Previous</span>
+            <span class="page-nav-title">Blood Flow</span>
+          </a>
+          <a href="./action-potential.html" class="page-nav-item page-nav-item--next">
+            <span class="page-nav-label">Next</span>
+            <span class="page-nav-title">Action Potential</span>
+          </a>
+        </nav>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/app.js"></script>
+  <script type="module">
+    import { Canvas }              from '../src/core/Canvas.js';
+    import { VascularResistance }  from '../src/examples/VascularResistance.js';
+    import { ControlPanel }        from '../src/controls/ControlPanel.js';
+    import { Slider }              from '../src/controls/Slider.js';
+    import { Button }              from '../src/controls/Button.js';
+
+    const canvas = new Canvas('#canvas', { width: 700, height: 470 });
+
+    const sim = new VascularResistance(canvas, {
+      heartRate: 72,
+      svr: 1.0,
+      contractility: 1.0,
+      preload: 1.0,
+    });
+    sim.play();
+
+    const panel = new ControlPanel('#controls', { title: 'Haemodynamic Parameters', theme: 'dark' });
+
+    panel.add(new Slider({
+      label: 'Vascular Resistance (SVR)',
+      min: 0.3, max: 3.5, step: 0.1, value: 1.0, unit: '×',
+      onChange: v => sim.setSVR(v),
+    }));
+    panel.add(new Slider({
+      label: 'Heart Rate',
+      min: 30, max: 150, step: 1, value: 72, unit: 'bpm',
+      onChange: v => sim.setHeartRate(v),
+    }));
+    panel.add(new Slider({
+      label: 'Contractility',
+      min: 0.2, max: 2.0, step: 0.05, value: 1.0,
+      onChange: v => sim.setContractility(v),
+    }));
+    panel.add(new Slider({
+      label: 'Preload',
+      min: 0.4, max: 1.8, step: 0.05, value: 1.0,
+      onChange: v => sim.setPreload(v),
+    }));
+    panel.add(new Button({
+      label: 'Reset to Normal',
+      onClick: () => {
+        sim.setSVR(1.0).setHeartRate(72).setContractility(1.0).setPreload(1.0);
+        panel.mount(); // refresh displayed values
+      },
+    }));
+
+    panel.mount();
+  </script>
+</body>
+</html>

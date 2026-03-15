@@ -17,7 +17,8 @@ const NAV = [
   {
     section: 'Getting Started',
     items: [
-      { label: 'Introduction', href: `${_base}/index.html`, icon: '◎' },
+      { label: 'Introduction',    href: `${_base}/index.html`,      icon: '◎' },
+      { label: 'Library Wiki',    href: `${_base}/wiki/index.html`, icon: '📖' },
     ]
   },
   {
@@ -25,8 +26,9 @@ const NAV = [
     items: [
       { label: 'Cardiac Cycle',     href: `${_base}/physiology/heart-beat.html`,      icon: '♥' },
       { label: 'Breathing',         href: `${_base}/physiology/breathing.html`,        icon: '🫁' },
-      { label: 'Blood Flow',        href: `${_base}/physiology/blood-flow.html`,       icon: '⟳' },
-      { label: 'Action Potential',  href: `${_base}/physiology/action-potential.html`, icon: '⚡' },
+      { label: 'Blood Flow',           href: `${_base}/physiology/blood-flow.html`,          icon: '⟳' },
+      { label: 'Vascular Resistance', href: `${_base}/physiology/vascular-resistance.html`, icon: '🫀' },
+      { label: 'Action Potential',    href: `${_base}/physiology/action-potential.html`,    icon: '⚡' },
     ]
   },
   {

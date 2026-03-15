@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Library Wiki — Medical Education</title>
+  <meta name="description" content="Complete API reference and architecture guide for the Medical Education animation library." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/style.css" />
+  <style>
+    /* ── Wiki-specific styles ── */
+    .wiki-toc { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 20px 24px; margin-bottom: 32px; }
+    .wiki-toc h3 { margin: 0 0 12px; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: #888; }
+    .wiki-toc ol { margin: 0; padding-left: 18px; }
+    .wiki-toc li { margin: 4px 0; }
+    .wiki-toc a { color: #58a6ff; font-size: 13px; text-decoration: none; }
+    .wiki-toc a:hover { text-decoration: underline; }
+    .wiki-toc ol ol { margin-top: 4px; }
+
+    .api-block { background: #161b22; border: 1px solid #21262d; border-radius: 8px; margin: 20px 0; overflow: hidden; }
+    .api-block-header { background: #1c2128; padding: 12px 16px; border-bottom: 1px solid #21262d; display: flex; align-items: center; gap: 10px; }
+    .api-block-icon { font-size: 16px; }
+    .api-block-name { font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 14px; font-weight: 600; color: #e6edf3; }
+    .api-block-extends { font-size: 12px; color: #888; margin-left: 4px; }
+    .api-block-body { padding: 16px; }
+    .api-block-desc { color: #8b949e; font-size: 13px; margin-bottom: 12px; line-height: 1.6; }
+
+    .api-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    .api-table th { text-align: left; padding: 6px 10px; color: #888; font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid #21262d; }
+    .api-table td { padding: 7px 10px; border-bottom: 1px solid #161b22; vertical-align: top; line-height: 1.5; }
+    .api-table tr:last-child td { border-bottom: none; }
+    .api-table code { background: #1c2128; border-radius: 3px; padding: 1px 5px; font-size: 11.5px; color: #79c0ff; font-family: monospace; white-space: nowrap; }
+    .api-table td:first-child code { color: #d2a8ff; }
+    .api-table .type { color: #56d364; font-family: monospace; font-size: 11px; }
+    .api-table .desc { color: #8b949e; }
+
+    .sub-section { margin-top: 28px; }
+    .sub-section h4 { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: #888; margin: 0 0 10px; }
+
+    .event-pill { display: inline-block; background: rgba(240,136,62,0.15); border: 1px solid rgba(240,136,62,0.3); color: #f0883e; border-radius: 3px; padding: 1px 6px; font-size: 11px; font-family: monospace; margin: 2px; }
+
+    .diagram-box { background: #0d1117; border: 1px solid #21262d; border-radius: 8px; padding: 20px; margin: 20px 0; overflow-x: auto; }
+    .diagram-box pre { margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #8b949e; line-height: 1.6; }
+
+    .badge { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 9px; margin-left: 6px; vertical-align: middle; }
+    .badge-core    { background: rgba(88,166,255,0.15); color: #58a6ff; border: 1px solid rgba(88,166,255,0.3); }
+    .badge-shape   { background: rgba(86,211,100,0.15); color: #56d364; border: 1px solid rgba(86,211,100,0.3); }
+    .badge-effect  { background: rgba(210,168,255,0.15); color: #d2a8ff; border: 1px solid rgba(210,168,255,0.3); }
+    .badge-control { background: rgba(240,136,62,0.15); color: #f0883e; border: 1px solid rgba(240,136,62,0.3); }
+    .badge-example { background: rgba(248,81,73,0.15); color: #f85149; border: 1px solid rgba(248,81,73,0.3); }
+
+    .code-example { background: #0d1117; border: 1px solid #21262d; border-radius: 6px; padding: 14px 16px; margin: 12px 0; }
+    .code-example pre { margin: 0; font-size: 12px; color: #e6edf3; font-family: monospace; line-height: 1.7; overflow-x: auto; }
+    .code-example .kw { color: #ff7b72; }
+    .code-example .cls { color: #79c0ff; }
+    .code-example .str { color: #a5d6ff; }
+    .code-example .num { color: #79c0ff; }
+    .code-example .cmt { color: #8b949e; }
+    .code-example .fn { color: #d2a8ff; }
+    .code-example .prop { color: #56d364; }
+
+    .arch-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 16px 0; }
+    .arch-tile { background: #161b22; border: 1px solid #21262d; border-radius: 6px; padding: 12px; text-align: center; }
+    .arch-tile-icon { font-size: 22px; margin-bottom: 6px; }
+    .arch-tile-name { font-size: 12px; font-weight: 600; color: #e6edf3; margin-bottom: 4px; font-family: monospace; }
+    .arch-tile-desc { font-size: 11px; color: #888; }
+
+    h2 { scroll-margin-top: 80px; }
+    h3 { scroll-margin-top: 80px; }
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <a href="../index.html" class="header-logo">
+      <div class="header-logo-mark">M</div>
+      <div><div class="header-logo-text">MedEdu</div></div>
+    </a>
+    <nav class="header-nav">
+      <a href="../index.html">Home</a>
+      <a href="https://github.com/lukebarge/Medical-Education" class="btn-github" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+    </nav>
+    <button class="hamburger" aria-label="Toggle navigation">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+  </header>
+
+  <div class="sidebar-overlay"></div>
+  <div class="layout">
+    <aside class="sidebar"></aside>
+    <main class="content">
+      <div class="content-inner">
+
+        <nav class="breadcrumb">
+          <a href="../index.html">Home</a>
+          <span class="breadcrumb-sep">/</span>
+          <span>Library Wiki</span>
+        </nav>
+
+        <h1 class="page-title">Library Wiki</h1>
+        <p class="page-subtitle">
+          Complete API reference for the Medical Education 2D canvas animation library.
+          All classes, methods, events, and usage patterns.
+        </p>
+
+        <!-- Table of Contents -->
+        <div class="wiki-toc">
+          <h3>Contents</h3>
+          <ol>
+            <li><a href="#architecture">Architecture Overview</a></li>
+            <li><a href="#quickstart">Quick Start</a></li>
+            <li><a href="#core">Core
+              <ol>
+                <li><a href="#EventEmitter">EventEmitter</a></li>
+                <li><a href="#Canvas">Canvas</a></li>
+                <li><a href="#Animation">Animation</a></li>
+                <li><a href="#Scene">Scene</a></li>
+                <li><a href="#Tween">Tween</a></li>
+                <li><a href="#Timeline">Timeline</a></li>
+                <li><a href="#Renderer">Renderer</a></li>
+              </ol>
+            </li>
+            <li><a href="#shapes">Shapes
+              <ol>
+                <li><a href="#Shape">Shape (base)</a></li>
+                <li><a href="#Circle">Circle</a></li>
+                <li><a href="#Rect">Rect</a></li>
+                <li><a href="#Path">Path</a></li>
+                <li><a href="#Text">Text</a></li>
+              </ol>
+            </li>
+            <li><a href="#effects">Effects
+              <ol>
+                <li><a href="#ParticleSystem">ParticleSystem</a></li>
+                <li><a href="#FlowPath">FlowPath</a></li>
+                <li><a href="#WaveForm">WaveForm</a></li>
+              </ol>
+            </li>
+            <li><a href="#controls">Controls
+              <ol>
+                <li><a href="#ControlPanel">ControlPanel</a></li>
+                <li><a href="#Slider">Slider</a></li>
+                <li><a href="#Toggle">Toggle</a></li>
+                <li><a href="#NumberInput">NumberInput</a></li>
+                <li><a href="#Button">Button</a></li>
+                <li><a href="#Binding">Binding</a></li>
+              </ol>
+            </li>
+            <li><a href="#examples">Medical Examples
+              <ol>
+                <li><a href="#HeartBeat">HeartBeat</a></li>
+                <li><a href="#Breathing">Breathing</a></li>
+                <li><a href="#BloodFlow">BloodFlow</a></li>
+                <li><a href="#VascularResistance">VascularResistance</a></li>
+                <li><a href="#ActionPotential">ActionPotential</a></li>
+                <li><a href="#DrugAbsorption">DrugAbsorption</a></li>
+                <li><a href="#Pharmacokinetics">Pharmacokinetics</a></li>
+              </ol>
+            </li>
+          </ol>
+        </div>
+
+        <!-- ══════════ 1. ARCHITECTURE ══════════ -->
+        <h2 id="architecture">1. Architecture Overview</h2>
+        <p>The library is structured in five layers. Higher layers depend on lower ones; the medical examples sit at the top and consume everything below.</p>
+
+        <div class="arch-grid">
+          <div class="arch-tile"><div class="arch-tile-icon">🫀</div><div class="arch-tile-name">examples/</div><div class="arch-tile-desc">Medical animations (HeartBeat, Breathing…)</div></div>
+          <div class="arch-tile"><div class="arch-tile-icon">🎛️</div><div class="arch-tile-name">controls/</div><div class="arch-tile-desc">Slider, Toggle, Button, ControlPanel</div></div>
+          <div class="arch-tile"><div class="arch-tile-icon">✨</div><div class="arch-tile-name">effects/</div><div class="arch-tile-desc">ParticleSystem, FlowPath, WaveForm</div></div>
+          <div class="arch-tile"><div class="arch-tile-icon">🔷</div><div class="arch-tile-name">shapes/</div><div class="arch-tile-desc">Circle, Rect, Path, Text</div></div>
+          <div class="arch-tile"><div class="arch-tile-icon">⚙️</div><div class="arch-tile-name">core/</div><div class="arch-tile-desc">Canvas, Animation, Scene, Tween…</div></div>
+        </div>
+
+        <div class="diagram-box">
+          <pre>
+User Input (DOM)
+    │
+    ▼
+Controls (Slider, Button…) ──emit('change')──▶ Binding ──▶ Animation property setters
+                                                                   │
+                                                                   ▼
+                                                        Animation._update(dt)
+                                                        Shape.animate() / Effects.update(dt)
+                                                                   │
+                                                                   ▼
+                                                        Animation._draw(ctx)
+                                                                   │
+                                                                   ▼
+                                                           Canvas.ctx → browser
+          </pre>
+        </div>
+
+        <p>
+          Every class extends <code>EventEmitter</code>, enabling pub/sub communication.
+          Two animation loop patterns are provided: <strong>Animation</strong> (single object,
+          own RAF loop) and <strong>Scene</strong> (multiple drawables sharing one loop).
+        </p>
+
+        <!-- ══════════ 2. QUICK START ══════════ -->
+        <h2 id="quickstart">2. Quick Start</h2>
+
+        <div class="code-example"><pre>
+<span class="kw">import</span> { <span class="cls">Canvas</span> }       <span class="kw">from</span> <span class="str">'./src/core/Canvas.js'</span>;
+<span class="kw">import</span> { <span class="cls">HeartBeat</span> }    <span class="kw">from</span> <span class="str">'./src/examples/HeartBeat.js'</span>;
+<span class="kw">import</span> { <span class="cls">ControlPanel</span> } <span class="kw">from</span> <span class="str">'./src/controls/ControlPanel.js'</span>;
+<span class="kw">import</span> { <span class="cls">Slider</span> }       <span class="kw">from</span> <span class="str">'./src/controls/Slider.js'</span>;
+
+<span class="cmt">// 1. Create canvas (HiDPI-aware)</span>
+<span class="kw">const</span> <span class="prop">canvas</span> = <span class="kw">new</span> <span class="cls">Canvas</span>(<span class="str">'#app'</span>, { width: <span class="num">800</span>, height: <span class="num">600</span> });
+
+<span class="cmt">// 2. Create animation</span>
+<span class="kw">const</span> <span class="prop">heart</span>  = <span class="kw">new</span> <span class="cls">HeartBeat</span>(<span class="prop">canvas</span>, { bpm: <span class="num">72</span>, contractility: <span class="num">0.8</span> });
+<span class="prop">heart</span>.<span class="fn">play</span>();
+
+<span class="cmt">// 3. Wire up controls</span>
+<span class="kw">const</span> <span class="prop">panel</span> = <span class="kw">new</span> <span class="cls">ControlPanel</span>(<span class="str">'#controls'</span>, { theme: <span class="str">'dark'</span> });
+<span class="prop">panel</span>.<span class="fn">add</span>(<span class="kw">new</span> <span class="cls">Slider</span>({ label: <span class="str">'BPM'</span>, min: <span class="num">30</span>, max: <span class="num">200</span>, value: <span class="num">72</span>,
+  <span class="fn">onChange</span>: v => <span class="prop">heart</span>.<span class="fn">setBPM</span>(v) }));
+<span class="prop">panel</span>.<span class="fn">mount</span>();
+
+<span class="cmt">// 4. React to events</span>
+<span class="prop">heart</span>.<span class="fn">on</span>(<span class="str">'systole'</span>, () => console.<span class="fn">log</span>(<span class="str">'Systole!'</span>));
+        </pre></div>
+
+        <!-- ══════════ 3. CORE ══════════ -->
+        <h2 id="core">3. Core <span class="badge badge-core">core/</span></h2>
+
+        <!-- EventEmitter -->
+        <div class="api-block" id="EventEmitter">
+          <div class="api-block-header">
+            <span class="api-block-icon">📡</span>
+            <span class="api-block-name">EventEmitter</span>
+          </div>
+          <div class="api-block-body">
+            <div class="api-block-desc">Minimal pub/sub base class inherited by all library classes. Enables decoupled communication between components.</div>
+            <div class="sub-section">
+              <h4>Methods</h4>
+              <table class="api-table">
+                <thead><tr><th>Method</th><th>Params</th><th>Returns</th><th>Description</th></tr></thead>
+                <tbody>
+                  <tr><td><code>on(event, fn)</code></td><td><span class="type">string, Function</span></td><td><code>this</code></td><td class="desc">Subscribe to an event.</td></tr>
+                  <tr><td><code>off(event, fn)</code></td><td><span class="type">string, Function</span></td><td><code>this</code></td><td class="desc">Unsubscribe a specific listener.</td></tr>
+                  <tr><td><code>once(event, fn)</code></td><td><span class="type">string, Function</span></td><td><code>this</code></td><td class="desc">Subscribe to fire exactly once then auto-remove.</td></tr>
+                  <tr><td><code>emit(event, data)</code></td><td><span class="type">string, any</span></td><td><code>this</code></td><td class="desc">Fire all listeners for an event with optional payload.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Canvas -->
+        <div class="api-block" id="Canvas">
+          <div class="api-block-header">
+            <span class="api-block-icon">🖼️</span>
+            <span class="api-block-name">Canvas</span>
+            <span class="api-block-extends">extends EventEmitter</span>
+          </div>
+          <div class="api-block-body">
+            <div class="api-block-desc">Wraps an HTML <code>&lt;canvas&gt;</code> element with automatic HiDPI/Retina scaling and optional ResizeObserver support.</div>
+            <div class="sub-section">
+              <h4>Constructor</h4>
+              <table class="api-table">
+                <thead><tr><th>Option</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+                <tbody>
+                  <tr><td><code>target</code></td><td><span class="type">string | HTMLCanvasElement</span></td><td>—</td><td class="desc">CSS selector or canvas element.</td></tr>
+                  <tr><td><code>width</code></td><td><span class="type">number</span></td><td><code>800</code></td><td class="desc">CSS pixel width.</td></tr>
+                  <tr><td><code>height</code></td><td><span class="type">number</span></td><td><code>600</code></td><td class="desc">CSS pixel height.</td></tr>
+                  <tr><td><code>autoResize</code></td><td><span class="type">boolean</span></td><td><code>false</code></td><td class="desc">Watch container via ResizeObserver; emits <code>'resize'</code>.</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="sub-section">
+              <h4>Properties &amp; Methods</h4>
+              <table class="api-table">
+                <thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+                <tbody>
+                  <tr><td><code>ctx</code></td><td><span class="type">CanvasRenderingContext2D</span></td><td class="desc">The 2D drawing context, pre-scaled for device pixel ratio.</td></tr>
+                  <tr><td><code>width</code></td><td><span class="type">number</span></td><td class="desc">CSS pixel width (use in drawing coordinates).</td></tr>
+                  <tr><td><code>height</code></td><td><span class="type">number</span></td><td class="desc">CSS pixel height.</td></tr>
+                  <tr><td><code>element</code></td><td><span class="type">HTMLCanvasElement</span></td><td class="desc">Underlying DOM element.</td></tr>
+                  <tr><td><code>resize(w, h)</code></td><td><span class="type">void</span></td><td class="desc">Resize and re-apply DPR scaling.</td></tr>
+                  <tr><td><code>clear()</code></td><td><span class="type">void</span></td><td class="desc">Clear the entire canvas (transparent).</td></tr>
+                  <tr><td><code>destroy()</code></td><td><span class="type">void</span></td><td class="desc">Disconnect ResizeObserver.</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="sub-section">
+              <h4>Events</h4>
+              <span class="event-pill">resize</span> <span style="font-size:12px;color:#8b949e;">→ <code>{ width, height }</code></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Animation -->
+        <div class="api-block" id="Animation">
+          <div class="api-block-header">
+            <span class="api-block-icon">🎬</span>
+            <span class="api-block-name">Animation</span>
+            <span class="api-block-extends">extends EventEmitter</span>
+          </div>
+          <div class="api-block-body">
+            <div class="api-block-desc">Abstract base class for single-object animations with a built-in <code>requestAnimationFrame</code> loop. Subclass and override <code>_update(dt)</code> and <code>_draw(ctx)</code>.</div>
+            <div class="sub-section">
+              <h4>Constructor options</h4>
+              <table class="api-table">
+                <thead><tr><th>Option</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+                <tbody>
+                  <tr><td><code>speed</code></td><td><span class="type">number</span></td><td><code>1</code></td><td class="desc">Playback speed multiplier. 2 = double speed.</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="sub-section">
+              <h4>Methods</h4>
+              <table class="api-table">
+                <thead><tr><th>Method</th><th>Description</th></tr></thead>
+                <tbody>
+                  <tr><td><code>play()</code></td><td class="desc">Start/resume the RAF loop.</td></tr>
+                  <tr><td><code>pause()</code></td><td class="desc">Suspend the loop (state preserved).</td></tr>
+                  <tr><td><code>stop()</code></td><td class="desc">Stop and reset state.</td></tr>
+                  <tr><td><code>step()</code></td><td class="desc">Advance one frame while paused.</td></tr>
+                  <tr><td><code>setSpeed(n)</code></td><td class="desc">Set playback multiplier.</td></tr>
+                  <tr><td><code>_update(dt, ts)</code></td><td class="desc"><em>Override.</em> State update. <code>dt</code> = elapsed ms × speed.</td></tr>
+                  <tr><td><code>_draw(ctx)</code></td><td class="desc"><em>Override.</em> Render the current state.</td></tr>
+                  <tr><td><code>reset()</code></td><td class="desc"><em>Override.</em> Reset state (called by <code>stop()</code>).</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="sub-section">
+              <h4>Events</h4>
+              <span class="event-pill">start</span>
+              <span class="event-pill">pause</span>
+              <span class="event-pill">stop</span>
+              <span class="event-pill">frame</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Scene -->
+        <div class="api-block" id="Scene">
+          <div class="api-block-header">
+            <span class="api-block-icon">🌐</span>
+            <span class="api-block-name">Scene</span>
+            <span class="api-block-extends">extends EventEmitter</span>
+          </div>
+          <div class="api-block-body">
+            <div class="api-block-desc">Manages a collection of drawable objects sharing a single RAF loop. Drawables must implement <code>draw(ctx)</code>; optionally <code>update(dt, ts)</code>.</div>
+            <div class="sub-section">
+              <h4>Methods</h4>
+              <table class="api-table">
+                <thead><tr><th>Method</th><th>Description</th></tr></thead>
+                <tbody>
+                  <tr><td><code>add(drawable)</code></td><td class="desc">Add a drawable to the scene.</td></tr>
+                  <tr><td><code>remove(drawable)</code></td><td class="desc">Remove a drawable.</td></tr>
+                  <tr><td><code>start()</code></td><td class="desc">Begin the RAF loop.</td></tr>
+                  <tr><td><code>stop()</code></td><td class="desc">Cancel the RAF loop.</td></tr>
+                  <tr><td><code>render()</code></td><td class="desc">Render one frame without starting the loop.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tween -->
+        <div class="api-block" id="Tween">
+          <div class="api-block-header">
+            <span class="api-block-icon">📐</span>
+            <span class="api-block-name">Tween</span>
+            <span class="api-block-extends">extends EventEmitter</span>
+          </div>
+          <div class="api-block-body">
+            <div class="api-block-desc">Interpolates a single numeric value from <code>from</code> to <code>to</code> over <code>duration</code> ms with configurable easing. Can run standalone or be added to a Timeline.</div>
+            <div class="sub-section">
+              <h4>Constructor options</h4>
+              <table class="api-table">
+                <thead><tr><th>Option</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+                <tbody>
+                  <tr><td><code>from</code></td><td><span class="type">number</span></td><td><code>0</code></td><td class="desc">Start value.</td></tr>
+                  <tr><td><code>to</code></td><td><span class="type">number</span></td><td><code>1</code></td><td class="desc">End value.</td></tr>
+                  <tr><td><code>duration</code></td><td><span class="type">number</span></td><td><code>1000</code></td><td class="desc">Duration in ms.</td></tr>
+                  <tr><td><code>easing</code></td><td><span class="type">string</span></td><td><code>'linear'</code></td><td class="desc"><code>linear</code> | <code>easeIn</code> | <code>easeOut</code> | <code>easeInOut</code> | <code>easeInCubic</code> | <code>easeOutCubic</code> | <code>easeInOutCubic</code> | <code>bounce</code> | <code>elastic</code></td></tr>
+                  <tr><td><code>delay</code></td><td><span class="type">number</span></td><td><code>0</code></td><td class="desc">Delay before starting (ms).</td></tr>
+                  <tr><td><code>loop</code></td><td><span class="type">boolean</span></td><td><code>false</code></td><td class="desc">Restart automatically.</td></tr>
+                  <tr><td><code>yoyo</code></td><td><span class="type">boolean</span></td><td><code>false</code></td><td class="desc">Reverse direction on each loop.</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="sub-section">
+              <h4>Methods &amp; Events</h4>
+              <table class="api-table">
+                <thead><tr><th>Method</th><th>Description</th></tr></thead>
+                <tbody>
+                  <tr><td><code>play() / pause() / stop()</code></td><td class="desc">Playback control.</td></tr>
+                  <tr><td><code>valueAt(t)</code></td><td class="desc">Get eased value at progress <code>t</code> (0–1) without advancing.</td></tr>
+                </tbody>
+              </table>
+              <span class="event-pill">start</span>
+              <span class="event-pill">update(value)</span>
+              <span class="event-pill">complete</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timeline -->
+        <div class="api-block" id="Timeline">
+          <div class="api-block-header">
+            <span class="api-block-icon">⏱️</span>
+            <span class="api-block-name">Timeline</span>
+            <span class="api-block-extends">extends EventEmitter</span>
+          </div>
+          <div class="api-block-body">
+            <div class="api-block-desc">Sequences or overlaps multiple Tweens on a shared timeline, enabling complex multi-property animations.</div>
+            <div class="sub-section">
+              <h4>Methods</h4>
+              <table class="api-table">
+                <thead><tr><th>Method</th><th>Params</th><th>Description</th></tr></thead>
+                <tbody>
+                  <tr><td><code>add(tween, opts)</code></td><td><span class="type">Tween, {at?, after?}</span></td><td class="desc"><code>at</code> = absolute ms; <code>after</code> = ms after previous tween ends.</td></tr>
+                  <tr><td><code>play() / pause() / stop()</code></td><td>—</td><td class="desc">Playback control.</td></tr>
+                </tbody>
+              </table>
+              <span class="event-pill">start</span>
+              <span class="event-pill">pause</span>
+              <span class="event-pill">stop</span>
+              <span class="event-pill">complete</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Renderer -->
+        <div class="api-block" id="Renderer">
+          <div class="api-block-header">
+            <span class="api-block-icon">🖌️</span>
+            <span class="api-block-name">Renderer</span>
+            <span class="api-block-extends">utility object (not a class)</span>
+          </div>
+          <div class="api-block-body">
+            <div class="api-block-desc">Stateless drawing helpers. Each function accepts <code>ctx</code> as the first argument.</div>
+            <div class="sub-section">
+              <table class="api-table">
+                <thead><tr><th>Function</th><th>Description</th></tr></thead>
+                <tbody>
+                  <tr><td><code>drawCircle(ctx, x, y, r, opts)</code></td><td class="desc">Filled/stroked circle.</td></tr>
+                  <tr><td><code>drawRect(ctx, x, y, w, h, opts)</code></td><td class="desc">Filled/stroked rectangle.</td></tr>
+                  <tr><td><code>drawPath(ctx, pts, opts)</code></td><td class="desc">Polyline through an array of <code>{x,y}</code> points.</td></tr>
+                  <tr><td><code>drawText(ctx, text, x, y, opts)</code></td><td class="desc">Text with font, fill, align options.</td></tr>
+                  <tr><td><code>drawArrow(ctx, x1, y1, x2, y2, opts)</code></td><td class="desc">Line with arrowhead.</td></tr>
+                  <tr><td><code>createLinearGradient(ctx, x1, y1, x2, y2, stops)</code></td><td class="desc">Convenience gradient builder.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════ 4. SHAPES ══════════ -->
+        <h2 id="shapes">4. Shapes <span class="badge badge-shape">shapes/</span></h2>
+
+        <div class="api-block" id="Shape">
+          <div class="api-block-header">
+            <span class="api-block-icon">🔷</span>
+            <span class="api-block-name">Shape</span>
+            <span class="api-block-extends">extends EventEmitter — abstract base</span>
+          </div>
+          <div class="api-block-body">
+            <div class="api-block-desc">Base class for all drawable shapes. Handles transform (translate, rotate, scale), opacity, and property animation via <code>Tween</code>.</div>
+            <div class="sub-section">
+              <h4>Common Properties</h4>
+              <table class="api-table">
+                <thead><tr><th>Property</th><th>Type</th><th>Default</th></tr></thead>
+                <tbody>
+                  <tr><td><code>x, y</code></td><td><span class="type">number</span></td><td><code>0</code></td></tr>
+                  <tr><td><code>rotation</code></td><td><span class="type">number</span></td><td><code>0</code> (radians)</td></tr>
+                  <tr><td><code>scaleX, scaleY</code></td><td><span class="type">number</span></td><td><code>1</code></td></tr>
+                  <tr><td><code>opacity</code></td><td><span class="type">number</span></td><td><code>1</code></td></tr>
+                  <tr><td><code>visible</code></td><td><span class="type">boolean</span></td><td><code>true</code></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="sub-section">
+              <h4>Key Methods</h4>
+              <table class="api-table">
+                <thead><tr><th>Method</th><th>Returns</th><th>Description</th></tr></thead>
+                <tbody>
+                  <tr><td><code>animate(props, opts)</code></td><td><span class="type">Tween[]</span></td><td class="desc">Animate multiple properties. <code>props = {x: 100, opacity: 0}</code>. Returns array of Tweens (one per property).</td></tr>
+                  <tr><td><code>draw(ctx)</code></td><td><span class="type">void</span></td><td class="desc">Apply transform, set opacity, call <code>_render(ctx)</code>.</td></tr>
+                  <tr><td><code>_render(ctx)</code></td><td><span class="type">void</span></td><td class="desc"><em>Override in subclass.</em> Draw at local origin.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="api-block" id="Circle">
+          <div class="api-block-header"><span class="api-block-icon">⭕</span><span class="api-block-name">Circle</span><span class="api-block-extends">extends Shape</span></div>
+          <div class="api-block-body">
+            <table class="api-table">
+              <thead><tr><th>Option</th><th>Type</th><th>Default</th></tr></thead>
+              <tbody>
+                <tr><td><code>radius</code></td><td><span class="type">number</span></td><td><code>20</code></td></tr>
+                <tr><td><code>fill</code></td><td><span class="type">string</span></td><td><code>'#ffffff'</code></td></tr>
+                <tr><td><code>stroke</code></td><td><span class="type">string</span></td><td><code>null</code></td></tr>
+                <tr><td><code>lineWidth</code></td><td><span class="type">number</span></td><td><code>1</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="api-block" id="Rect">
+          <div class="api-block-header"><span class="api-block-icon">▭</span><span class="api-block-name">Rect</span><span class="api-block-extends">extends Shape</span></div>
+          <div class="api-block-body">
+            <table class="api-table">
+              <thead><tr><th>Option</th><th>Type</th><th>Default</th></tr></thead>
+              <tbody>
+                <tr><td><code>width, height</code></td><td><span class="type">number</span></td><td><code>100, 60</code></td></tr>
+                <tr><td><code>fill</code></td><td><span class="type">string</span></td><td><code>'#ffffff'</code></td></tr>
+                <tr><td><code>stroke</code></td><td><span class="type">string</span></td><td><code>null</code></td></tr>
+                <tr><td><code>radius</code></td><td><span class="type">number</span></td><td><code>0</code> (corner radius)</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="api-block" id="Path">
+          <div class="api-block-header"><span class="api-block-icon">〰️</span><span class="api-block-name">Path</span><span class="api-block-extends">extends Shape</span></div>
+          <div class="api-block-body">
+            <table class="api-table">
+              <thead><tr><th>Option</th><th>Type</th><th>Default</th></tr></thead>
+              <tbody>
+                <tr><td><code>points</code></td><td><span class="type">number[][]</span></td><td><code>[]</code></td></tr>
+                <tr><td><code>stroke</code></td><td><span class="type">string</span></td><td><code>'#ffffff'</code></td></tr>
+                <tr><td><code>fill</code></td><td><span class="type">string|null</span></td><td><code>null</code></td></tr>
+                <tr><td><code>closed</code></td><td><span class="type">boolean</span></td><td><code>false</code></td></tr>
+                <tr><td><code>smooth</code></td><td><span class="type">boolean</span></td><td><code>false</code> (bezier smoothing)</td></tr>
+                <tr><td><code>lineDash</code></td><td><span class="type">number[]</span></td><td><code>[]</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="api-block" id="Text">
+          <div class="api-block-header"><span class="api-block-icon">Ⓣ</span><span class="api-block-name">Text</span><span class="api-block-extends">extends Shape</span></div>
+          <div class="api-block-body">
+            <table class="api-table">
+              <thead><tr><th>Option</th><th>Type</th><th>Default</th></tr></thead>
+              <tbody>
+                <tr><td><code>text</code></td><td><span class="type">string</span></td><td><code>''</code></td></tr>
+                <tr><td><code>font</code></td><td><span class="type">string</span></td><td><code>'16px sans-serif'</code></td></tr>
+                <tr><td><code>fill</code></td><td><span class="type">string</span></td><td><code>'#ffffff'</code></td></tr>
+                <tr><td><code>align</code></td><td><span class="type">string</span></td><td><code>'left'</code></td></tr>
+                <tr><td><code>baseline</code></td><td><span class="type">string</span></td><td><code>'alphabetic'</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ══════════ 5. EFFECTS ══════════ -->
+        <h2 id="effects">5. Effects <span class="badge badge-effect">effects/</span></h2>
+
+        <div class="api-block" id="ParticleSystem">
+          <div class="api-block-header">
+            <span class="api-block-icon">✨</span>
+            <span class="api-block-name">ParticleSystem</span>
+            <span class="api-block-extends">extends EventEmitter</span>
+          </div>
+          <div class="api-block-body">
+            <div class="api-block-desc">2D particle emitter with velocity, gravity, lifetime, and fade. Supports continuous or burst emission.</div>
+            <div class="sub-section">
+              <h4>Constructor options</h4>
+              <table class="api-table">
+                <thead><tr><th>Option</th><th>Type</th><th>Default</th></tr></thead>
+                <tbody>
+                  <tr><td><code>x, y</code></td><td><span class="type">number</span></td><td><code>0, 0</code></td></tr>
+                  <tr><td><code>emitRate</code></td><td><span class="type">number</span></td><td><code>10</code> per second</td></tr>
+                  <tr><td><code>maxParticles</code></td><td><span class="type">number</span></td><td><code>200</code></td></tr>
+                  <tr><td><code>lifetime</code></td><td><span class="type">number</span></td><td><code>1000</code> ms</td></tr>
+                  <tr><td><code>speed</code></td><td><span class="type">number</span></td><td><code>50</code> px/s</td></tr>
+                  <tr><td><code>gravity</code></td><td><span class="type">number</span></td><td><code>0</code></td></tr>
+                  <tr><td><code>radius</code></td><td><span class="type">number | [min,max]</span></td><td><code>3</code></td></tr>
+                  <tr><td><code>color</code></td><td><span class="type">string | Function</span></td><td><code>'#fff'</code></td></tr>
+                  <tr><td><code>fade</code></td><td><span class="type">boolean</span></td><td><code>true</code></td></tr>
+                  <tr><td><code>spread</code></td><td><span class="type">number</span></td><td><code>360</code> (degrees)</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="sub-section">
+              <h4>Methods</h4>
+              <table class="api-table">
+                <thead><tr><th>Method</th><th>Description</th></tr></thead>
+                <tbody>
+                  <tr><td><code>start() / stop()</code></td><td class="desc">Begin/end continuous emission.</td></tr>
+                  <tr><td><code>emit(count)</code></td><td class="desc">Burst-emit N particles immediately.</td></tr>
+                  <tr><td><code>clear()</code></td><td class="desc">Remove all active particles.</td></tr>
+                  <tr><td><code>update(dt)</code></td><td class="desc">Advance simulation; called by Scene or manually.</td></tr>
+                  <tr><td><code>draw(ctx)</code></td><td class="desc">Render all active particles.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="api-block" id="FlowPath">
+          <div class="api-block-header">
+            <span class="api-block-icon">〰️</span>
+            <span class="api-block-name">FlowPath</span>
+            <span class="api-block-extends">extends EventEmitter</span>
+          </div>
+          <div class="api-block-body">
+            <div class="api-block-desc">Animates particles flowing along a bezier or polyline path. Pre-computes an evenly-spaced point cache for smooth, constant-speed traversal.</div>
+            <div class="sub-section">
+              <h4>Key options &amp; methods</h4>
+              <table class="api-table">
+                <thead><tr><th>Name</th><th>Type</th><th>Description</th></tr></thead>
+                <tbody>
+                  <tr><td><code>path</code></td><td><span class="type">{x,y}[]</span></td><td class="desc">Array of waypoints defining the flow path.</td></tr>
+                  <tr><td><code>particleCount</code></td><td><span class="type">number</span></td><td class="desc">Number of particles on the path.</td></tr>
+                  <tr><td><code>speed</code></td><td><span class="type">number</span></td><td class="desc">Traversal speed (px/s).</td></tr>
+                  <tr><td><code>spread</code></td><td><span class="type">number</span></td><td class="desc">Perpendicular scatter around path (px).</td></tr>
+                  <tr><td><code>color</code></td><td><span class="type">string</span></td><td class="desc">Particle colour.</td></tr>
+                  <tr><td><code>showPath</code></td><td><span class="type">boolean</span></td><td class="desc">Draw faint guide line.</td></tr>
+                  <tr><td><code>play() / pause()</code></td><td>—</td><td class="desc">Flow control.</td></tr>
+                  <tr><td><code>setPath(pts)</code></td><td>—</td><td class="desc">Replace path and rebuild cache.</td></tr>
+                  <tr><td><code>setSpeed(n)</code></td><td>—</td><td class="desc">Update flow speed.</td></tr>
+                  <tr><td><code>update(dt) / draw(ctx)</code></td><td>—</td><td class="desc">Scene-compatible interface.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="api-block" id="WaveForm">
+          <div class="api-block-header">
+            <span class="api-block-icon">📈</span>
+            <span class="api-block-name">WaveForm</span>
+            <span class="api-block-extends">extends EventEmitter</span>
+          </div>
+          <div class="api-block-body">
+            <div class="api-block-desc">Scrolling or fixed-window line graph for real-time time-series data. Two modes: <strong>push mode</strong> (live data) and <strong>play mode</strong> (pre-recorded dataset).</div>
+            <div class="sub-section">
+              <h4>Options</h4>
+              <table class="api-table">
+                <thead><tr><th>Option</th><th>Default</th><th>Description</th></tr></thead>
+                <tbody>
+                  <tr><td><code>x, y, width, height</code></td><td>—</td><td class="desc">Plot area in canvas coordinates.</td></tr>
+                  <tr><td><code>yMin, yMax</code></td><td><code>-1, 1</code></td><td class="desc">Y axis domain.</td></tr>
+                  <tr><td><code>color</code></td><td><code>'#00cc00'</code></td><td class="desc">Line color.</td></tr>
+                  <tr><td><code>scrolling</code></td><td><code>true</code></td><td class="desc">Scroll to show latest N points vs. fill fixed window.</td></tr>
+                  <tr><td><code>maxPoints</code></td><td><code>500</code></td><td class="desc">Max data points retained.</td></tr>
+                  <tr><td><code>background</code></td><td><code>null</code></td><td class="desc">Optional background fill.</td></tr>
+                  <tr><td><code>showAxes</code></td><td><code>true</code></td><td class="desc">Draw axis lines and zero-line.</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="sub-section">
+              <h4>Methods</h4>
+              <table class="api-table">
+                <thead><tr><th>Method</th><th>Description</th></tr></thead>
+                <tbody>
+                  <tr><td><code>push(value)</code></td><td class="desc">Add a data point (real-time mode).</td></tr>
+                  <tr><td><code>setData(array)</code></td><td class="desc">Load a pre-recorded dataset.</td></tr>
+                  <tr><td><code>play(speed) / stopPlay()</code></td><td class="desc">Animate through dataset.</td></tr>
+                  <tr><td><code>addLabel(label, value, color)</code></td><td class="desc">Mark a horizontal reference value (e.g. threshold).</td></tr>
+                  <tr><td><code>update(dt) / draw(ctx)</code></td><td class="desc">Scene-compatible interface.</td></tr>
+                </tbody>
+              </table>
+              <span class="event-pill">complete</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════ 6. CONTROLS ══════════ -->
+        <h2 id="controls">6. Controls <span class="badge badge-control">controls/</span></h2>
+
+        <div class="api-block" id="ControlPanel">
+          <div class="api-block-header">
+            <span class="api-block-icon">🎛️</span>
+            <span class="api-block-name">ControlPanel</span>
+            <span class="api-block-extends">extends EventEmitter</span>
+          </div>
+          <div class="api-block-body">
+            <div class="api-block-desc">UI container that groups controls and mounts them into the DOM. Injects scoped CSS on first use.</div>
+            <div class="sub-section">
+              <h4>Constructor</h4>
+              <table class="api-table">
+                <thead><tr><th>Option</th><th>Type</th><th>Default</th></tr></thead>
+                <tbody>
+                  <tr><td><code>target</code></td><td><span class="type">string | HTMLElement</span></td><td>—</td></tr>
+                  <tr><td><code>title</code></td><td><span class="type">string</span></td><td><code>''</code></td></tr>
+                  <tr><td><code>theme</code></td><td><span class="type">'light' | 'dark'</span></td><td><code>'dark'</code></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="sub-section">
+              <table class="api-table">
+                <thead><tr><th>Method</th><th>Description</th></tr></thead>
+                <tbody>
+                  <tr><td><code>add(control)</code></td><td class="desc">Add a Slider, Toggle, NumberInput, or Button.</td></tr>
+                  <tr><td><code>mount()</code></td><td class="desc">Render the panel into the target element.</td></tr>
+                  <tr><td><code>destroy()</code></td><td class="desc">Remove from DOM.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="api-block" id="Slider">
+          <div class="api-block-header"><span class="api-block-icon">⟷</span><span class="api-block-name">Slider</span><span class="api-block-extends">extends EventEmitter</span></div>
+          <div class="api-block-body">
+            <div class="api-block-desc">HTML range input with live value label. Fires <span class="event-pill">change(value)</span> on input.</div>
+            <table class="api-table">
+              <thead><tr><th>Option</th><th>Type</th><th>Default</th></tr></thead>
+              <tbody>
+                <tr><td><code>label</code></td><td><span class="type">string</span></td><td>—</td></tr>
+                <tr><td><code>min, max, step</code></td><td><span class="type">number</span></td><td><code>0, 100, 1</code></td></tr>
+                <tr><td><code>value</code></td><td><span class="type">number</span></td><td><code>50</code></td></tr>
+                <tr><td><code>unit</code></td><td><span class="type">string</span></td><td><code>''</code></td></tr>
+                <tr><td><code>onChange</code></td><td><span class="type">Function</span></td><td>—</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="api-block" id="Toggle">
+          <div class="api-block-header"><span class="api-block-icon">☑</span><span class="api-block-name">Toggle</span><span class="api-block-extends">extends EventEmitter</span></div>
+          <div class="api-block-body">
+            <div class="api-block-desc">Boolean checkbox control. Fires <span class="event-pill">change(boolean)</span>.</div>
+            <table class="api-table">
+              <thead><tr><th>Option</th><th>Type</th></tr></thead>
+              <tbody>
+                <tr><td><code>label</code></td><td><span class="type">string</span></td></tr>
+                <tr><td><code>value</code></td><td><span class="type">boolean</span> (initial state)</td></tr>
+                <tr><td><code>onChange</code></td><td><span class="type">Function(boolean)</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="api-block" id="NumberInput">
+          <div class="api-block-header"><span class="api-block-icon">#</span><span class="api-block-name">NumberInput</span><span class="api-block-extends">extends EventEmitter</span></div>
+          <div class="api-block-body">
+            <div class="api-block-desc">Numeric text input with min/max clamping. Fires <span class="event-pill">change(number)</span>.</div>
+            <table class="api-table">
+              <thead><tr><th>Option</th><th>Type</th></tr></thead>
+              <tbody>
+                <tr><td><code>label, value, min, max, step, unit</code></td><td><span class="type">string / number</span></td></tr>
+                <tr><td><code>onChange</code></td><td><span class="type">Function(number)</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="api-block" id="Button">
+          <div class="api-block-header"><span class="api-block-icon">▶</span><span class="api-block-name">Button</span><span class="api-block-extends">extends EventEmitter</span></div>
+          <div class="api-block-body">
+            <div class="api-block-desc">Action trigger. Fires <span class="event-pill">click</span>.</div>
+            <table class="api-table">
+              <thead><tr><th>Method</th><th>Description</th></tr></thead>
+              <tbody>
+                <tr><td><code>setLabel(text)</code></td><td class="desc">Update button label.</td></tr>
+                <tr><td><code>setDisabled(bool)</code></td><td class="desc">Enable/disable.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="api-block" id="Binding">
+          <div class="api-block-header">
+            <span class="api-block-icon">🔗</span>
+            <span class="api-block-name">Binding</span>
+            <span class="api-block-extends">utility (static factory)</span>
+          </div>
+          <div class="api-block-body">
+            <div class="api-block-desc">Creates two-way bindings between a control and an animation property. Control changes update the target; target emitting <code>${property}Changed</code> updates the control.</div>
+            <div class="code-example"><pre>
+<span class="cmt">// Link slider to heart.bpm</span>
+<span class="cls">Binding</span>.<span class="fn">create</span>(bpmSlider, heart, <span class="str">'bpm'</span>);
+<span class="cmt">// Now: slider change → heart.bpm = value
+//      heart.emit('bpmChanged', value) → updates slider</span>
+            </pre></div>
+          </div>
+        </div>
+
+        <!-- ══════════ 7. EXAMPLES ══════════ -->
+        <h2 id="examples">7. Medical Examples <span class="badge badge-example">examples/</span></h2>
+        <p>All examples extend <code>Animation</code>. Constructor takes <code>(canvas, params)</code>.</p>
+
+        <div class="api-block" id="HeartBeat">
+          <div class="api-block-header"><span class="api-block-icon">❤️</span><span class="api-block-name">HeartBeat</span><span class="api-block-extends">extends Animation</span></div>
+          <div class="api-block-body">
+            <div class="api-block-desc">Cardiac cycle with systole/diastole phase state machine. Implements Frank–Starling length-tension curve.</div>
+            <div class="sub-section"><h4>Key params &amp; setters</h4>
+            <table class="api-table"><thead><tr><th>Param / Method</th><th>Default</th><th>Description</th></tr></thead><tbody>
+              <tr><td><code>bpm</code> / <code>setBPM(v)</code></td><td><code>72</code></td><td class="desc">Heart rate.</td></tr>
+              <tr><td><code>contractility</code> / <code>setContractility(v)</code></td><td><code>0.7</code></td><td class="desc">0.1–1.0. Inotropic state.</td></tr>
+              <tr><td><code>sarcomereLength</code> / <code>setSarcomereLength(v)</code></td><td><code>2.2 μm</code></td><td class="desc">Pre-load. Frank–Starling strength modifier.</td></tr>
+              <tr><td><code>showLabels(bool)</code></td><td><code>true</code></td><td class="desc">Toggle anatomical labels.</td></tr>
+              <tr><td><code>triggerArrhythmia()</code></td><td>—</td><td class="desc">Inject a tachyarrhythmia burst.</td></tr>
+            </tbody></table></div>
+            <div class="sub-section"><h4>Events</h4>
+              <span class="event-pill">beat</span><span class="event-pill">systole</span><span class="event-pill">diastole</span><span class="event-pill">arrhythmia</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="api-block" id="Breathing">
+          <div class="api-block-header"><span class="api-block-icon">🫁</span><span class="api-block-name">Breathing</span><span class="api-block-extends">extends Animation</span></div>
+          <div class="api-block-body">
+            <div class="api-block-desc">Respiratory cycle with two lung chambers inflating/deflating. Models airway resistance effects.</div>
+            <table class="api-table"><thead><tr><th>Setter</th><th>Description</th></tr></thead><tbody>
+              <tr><td><code>setRate(v)</code></td><td class="desc">Breaths per minute.</td></tr>
+              <tr><td><code>setTidalVolume(v)</code></td><td class="desc">Volume per breath (mL).</td></tr>
+              <tr><td><code>setAirwayResistance(v)</code></td><td class="desc">Resistance factor (0–1).</td></tr>
+            </tbody></table>
+            <span class="event-pill">breathCycle</span><span class="event-pill">inhale</span><span class="event-pill">exhale</span>
+          </div>
+        </div>
+
+        <div class="api-block" id="BloodFlow">
+          <div class="api-block-header"><span class="api-block-icon">⟳</span><span class="api-block-name">BloodFlow</span><span class="api-block-extends">extends Animation</span></div>
+          <div class="api-block-body">
+            <div class="api-block-desc">Systemic and pulmonary circulation via two FlowPath effects. Applies Ohm's law: Flow = ΔP / R.</div>
+            <table class="api-table"><thead><tr><th>Setter</th><th>Description</th></tr></thead><tbody>
+              <tr><td><code>setVascularResistance(v)</code></td><td class="desc">Peripheral resistance (relative).</td></tr>
+              <tr><td><code>setPressure(v)</code></td><td class="desc">Driving pressure.</td></tr>
+              <tr><td><code>setViscosity(v)</code></td><td class="desc">Blood viscosity factor.</td></tr>
+            </tbody></table>
+          </div>
+        </div>
+
+        <div class="api-block" id="VascularResistance">
+          <div class="api-block-header"><span class="api-block-icon">🫀</span><span class="api-block-name">VascularResistance</span><span class="api-block-extends">extends Animation</span></div>
+          <div class="api-block-body">
+            <div class="api-block-desc">Full haemodynamic physics simulation: beating LV, Poiseuille-narrowing arterioles, blood particle flow, and live aortic pressure waveform.</div>
+            <div class="sub-section"><h4>Physics: MAP = CO × SVR</h4></div>
+            <table class="api-table"><thead><tr><th>Setter</th><th>Normal range</th><th>Description</th></tr></thead><tbody>
+              <tr><td><code>setSVR(v)</code></td><td>0.3–3.5 ×</td><td class="desc">Systemic vascular resistance. Arteriole lumen width ∝ 1/√SVR.</td></tr>
+              <tr><td><code>setHeartRate(v)</code></td><td>20–200 bpm</td><td class="desc">Beats per minute.</td></tr>
+              <tr><td><code>setContractility(v)</code></td><td>0.2–2.0</td><td class="desc">Ejection fraction modifier.</td></tr>
+              <tr><td><code>setPreload(v)</code></td><td>0.4–1.8</td><td class="desc">EDV scaling (Frank–Starling preload).</td></tr>
+            </tbody></table>
+            <div class="sub-section"><h4>Live readout properties</h4>
+              <code>sim.strokeVolume</code> · <code>sim.cardiacOutput</code> · <code>sim.map</code> · <code>sim.sbp</code> · <code>sim.dbp</code>
+            </div>
+            <span class="event-pill">beat({co, map})</span>
+          </div>
+        </div>
+
+        <div class="api-block" id="ActionPotential">
+          <div class="api-block-header"><span class="api-block-icon">⚡</span><span class="api-block-name">ActionPotential</span><span class="api-block-extends">extends Animation</span></div>
+          <div class="api-block-body">
+            <div class="api-block-desc">Nerve impulse propagation via a four-phase state machine (rest → depolarisation → repolarisation → refractory). Renders voltage trace + ion channels.</div>
+            <table class="api-table"><thead><tr><th>Setter</th><th>Description</th></tr></thead><tbody>
+              <tr><td><code>setThreshold(v)</code></td><td class="desc">Membrane threshold (mV).</td></tr>
+              <tr><td><code>setConductionVelocity(v)</code></td><td class="desc">Signal speed.</td></tr>
+              <tr><td><code>setRefractoryPeriod(v)</code></td><td class="desc">Refractory period (ms).</td></tr>
+              <tr><td><code>trigger()</code></td><td class="desc">Fire a single action potential.</td></tr>
+              <tr><td><code>setAutoFire(bool, interval)</code></td><td class="desc">Continuous firing.</td></tr>
+            </tbody></table>
+            <span class="event-pill">trigger</span><span class="event-pill">depolarization</span><span class="event-pill">repolarization</span><span class="event-pill">refractory</span>
+          </div>
+        </div>
+
+        <div class="api-block" id="DrugAbsorption">
+          <div class="api-block-header"><span class="api-block-icon">💊</span><span class="api-block-name">DrugAbsorption</span><span class="api-block-extends">extends Animation</span></div>
+          <div class="api-block-body">
+            <div class="api-block-desc">Three administration route flows (oral, IV, sublingual) with pharmacokinetically accurate absorption speeds. Particle count scales with dose.</div>
+            <table class="api-table"><thead><tr><th>Setter</th><th>Description</th></tr></thead><tbody>
+              <tr><td><code>setDose(mg)</code></td><td class="desc">Dose in mg.</td></tr>
+              <tr><td><code>setAbsorptionRate(v)</code></td><td class="desc">Rate constant (0–1).</td></tr>
+              <tr><td><code>setRoute(route)</code></td><td class="desc"><code>'oral' | 'iv' | 'sublingual'</code></td></tr>
+            </tbody></table>
+          </div>
+        </div>
+
+        <div class="api-block" id="Pharmacokinetics">
+          <div class="api-block-header"><span class="api-block-icon">≈</span><span class="api-block-name">Pharmacokinetics</span><span class="api-block-extends">extends Animation</span></div>
+          <div class="api-block-body">
+            <div class="api-block-desc">One-compartment PK model using the Bateman equation. Animates concentration-time curve with Cmax, t½ annotations.</div>
+            <table class="api-table"><thead><tr><th>Setter</th><th>Description</th></tr></thead><tbody>
+              <tr><td><code>setCmax(v)</code></td><td class="desc">Peak concentration (mg/L).</td></tr>
+              <tr><td><code>setHalfLife(h)</code></td><td class="desc">Elimination t½ (hours).</td></tr>
+              <tr><td><code>setTmax(h)</code></td><td class="desc">Time to peak.</td></tr>
+              <tr><td><code>setVd(L)</code></td><td class="desc">Volume of distribution.</td></tr>
+              <tr><td><code>reset()</code></td><td class="desc">Restart the curve.</td></tr>
+            </tbody></table>
+            <span class="event-pill">complete</span>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="../assets/app.js"></script>
+</body>
+</html>
