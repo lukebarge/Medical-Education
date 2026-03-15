@@ -1,82 +1,80 @@
-import { Animation } from '../core/Animation.js';
+import gsap from 'gsap';
+import { SvgAnimation } from '../core/SvgAnimation.js';
 
-// Number of pre-baked contraction frames (0 = relaxed, N-1 = fully contracted)
-const FRAME_COUNT = 64;
-// Offscreen frame dimensions (large enough for heart + max shadow blur)
-const FRAME_W = 160;
-const FRAME_H = 150;
-// Heart center within each frame
-const FC_X = FRAME_W / 2;
-const FC_Y = FRAME_H / 2;
+// Unique ID counter so multiple instances don't share SVG defs IDs
+let _uid = 0;
+
+// Heart bezier path — coordinates match the original Canvas implementation
+// (hw=60, hh=55, center at 0,0)
+const HEART_PATH =
+  'M 0,-8.25 ' +
+  'C -6,-55 -60,-49.5 -60,-16.5 ' +
+  'C -60,11 -18,33 0,55 ' +
+  'C 18,33 60,11 60,-16.5 ' +
+  'C 60,-49.5 6,-55 0,-8.25 Z';
 
 /**
- * Heart beat animation showing the cardiac cycle (systole and diastole).
+ * Heart beat animation — SVG + GSAP implementation.
  *
- * Uses a game-dev sprite approach: all FRAME_COUNT heart frames are rendered
- * once at init into OffscreenCanvas objects. Every animation tick just calls
- * ctx.drawImage() to blit the right frame — no bezier curves rebuilt at runtime.
- * Dynamic overlays (labels) are still drawn live on top.
+ * Replaces the Canvas/rAF version. A GSAP timeline drives the cardiac
+ * cycle (systole → diastole → rest) at the requested BPM. All shape
+ * geometry lives in a static SVG; GSAP animates scale and the glow filter.
  *
  * Parameters:
- *   - bpm: beats per minute (40–200)
- *   - contractility: contraction strength 0–1
- *   - sarcomereLength: 1.6–2.6 μm (Frank-Starling: affects contraction depth)
- *   - showLabels: toggle anatomical labels
+ *   - bpm: beats per minute (default 72)
+ *   - contractility: contraction strength 0–1 (default 0.7)
+ *   - sarcomereLength: 1.6–2.6 μm, Frank-Starling depth (default 2.2)
+ *   - showLabels: show LV/RV/LA/RA text labels (default true)
+ *   - width / height: SVG CSS size in px (defaults 400 × 360)
  *
  * @example
- * const heart = new HeartBeat(canvas, { bpm: 72 });
+ * const heart = new HeartBeat('#container', { bpm: 72 });
  * heart.play();
- * heart.setBPM(120);
+ * heart.setBPM(100);
  */
-export class HeartBeat extends Animation {
+export class HeartBeat extends SvgAnimation {
   /**
-   * @param {import('../core/Canvas.js').Canvas} canvas
+   * @param {string|Element} container
    * @param {object} [params]
    * @param {number} [params.bpm=72]
    * @param {number} [params.contractility=0.7]
-   * @param {number} [params.sarcomereLength=2.2] - μm
+   * @param {number} [params.sarcomereLength=2.2]
    * @param {boolean} [params.showLabels=true]
-   * @param {number} [params.x] - center x, defaults to canvas center
-   * @param {number} [params.y] - center y, defaults to canvas center
-   * @param {number} [params.scale=1]
+   * @param {number} [params.width=400]
+   * @param {number} [params.height=360]
    */
-  constructor(canvas, params = {}) {
-    super(canvas, params);
-    this.bpm = params.bpm !== undefined ? params.bpm : 72;
-    this.contractility = params.contractility !== undefined ? params.contractility : 0.7;
-    this.sarcomereLength = params.sarcomereLength !== undefined ? params.sarcomereLength : 2.2;
-    this._showLabels = params.showLabels !== undefined ? params.showLabels : true;
-    this.x = params.x !== undefined ? params.x : canvas.width / 2;
-    this.y = params.y !== undefined ? params.y : canvas.height / 2;
-    this.scale = params.scale !== undefined ? params.scale : 1;
-
-    // Internal animation state
-    this._phase = 0;
-    this._beatProgress = 0;
-    this._isContracted = false;
-
-    // Pre-bake all heart frames into OffscreenCanvases once
-    this._frames = this._bakeSprites();
+  constructor(container, params = {}) {
+    super(container, { width: 400, height: 360, ...params });
+    this.bpm = params.bpm ?? 72;
+    this.contractility = params.contractility ?? 0.7;
+    this.sarcomereLength = params.sarcomereLength ?? 2.2;
+    this._showLabels = params.showLabels ?? true;
   }
+
+  // ─── Public API ───────────────────────────────────────────────────────────
 
   setBPM(bpm) {
     this.bpm = Math.max(1, bpm);
+    this._rebuildTimeline();
     this.emit('bpmChanged', this.bpm);
     return this;
   }
 
   setContractility(v) {
     this.contractility = Math.max(0, Math.min(1, v));
+    this._rebuildTimeline();
     return this;
   }
 
   setSarcomereLength(v) {
     this.sarcomereLength = Math.max(1.6, Math.min(2.6, v));
+    this._rebuildTimeline();
     return this;
   }
 
   showLabels(show) {
     this._showLabels = show;
+    if (this._labelGroup) this._labelGroup.style.display = show ? '' : 'none';
     return this;
   }
 
@@ -88,189 +86,146 @@ export class HeartBeat extends Animation {
     return this;
   }
 
-  reset() {
-    this._phase = 0;
-    this._beatProgress = 0;
-  }
+  // ─── SvgAnimation overrides ───────────────────────────────────────────────
 
-  // ─── Sprite baking (runs once at init) ────────────────────────────────────
+  _setup(svg) {
+    const id = ++_uid;
 
-  /**
-   * Pre-render every contraction level to an OffscreenCanvas.
-   * Returns an array of FRAME_COUNT OffscreenCanvas objects.
-   */
-  _bakeSprites() {
-    const frames = [];
-    for (let i = 0; i < FRAME_COUNT; i++) {
-      const contraction = i / (FRAME_COUNT - 1); // 0..1
-      const oc = new OffscreenCanvas(FRAME_W, FRAME_H);
-      const ctx = oc.getContext('2d');
-      ctx.translate(FC_X, FC_Y);
-      this._renderHeartFrame(ctx, contraction);
-      frames.push(oc);
+    // viewBox centres the heart (hw=60, hh=55) with room for glow
+    svg.setAttribute('viewBox', '-85 -75 170 150');
+
+    // ── Defs ──────────────────────────────────────────────────────────────
+    const defs = this._el('defs');
+
+    // Linear gradient — dark red → red → darker red
+    const lg = this._el('linearGradient', {
+      id: `hbGrad${id}`,
+      x1: '-1', y1: '-1', x2: '1', y2: '1',
+      gradientUnits: 'objectBoundingBox',
+    });
+    lg.appendChild(this._el('stop', { offset: '0%',   'stop-color': '#c0392b' }));
+    lg.appendChild(this._el('stop', { offset: '50%',  'stop-color': '#e74c3c' }));
+    lg.appendChild(this._el('stop', { offset: '100%', 'stop-color': '#922b21' }));
+    defs.appendChild(lg);
+
+    // Drop-shadow filter for systolic glow
+    const filter = this._el('filter', { id: `hbGlow${id}`, x: '-30%', y: '-30%', width: '160%', height: '160%' });
+    this._glowBlur = this._el('feGaussianBlur', { in: 'SourceGraphic', stdDeviation: '0', result: 'blur' });
+    const merge = this._el('feMerge');
+    merge.appendChild(this._el('feMergeNode', { in: 'blur' }));
+    merge.appendChild(this._el('feMergeNode', { in: 'SourceGraphic' }));
+    filter.appendChild(this._glowBlur);
+    filter.appendChild(merge);
+    defs.appendChild(filter);
+
+    svg.appendChild(defs);
+
+    // ── Heart group (scaled during beat) ──────────────────────────────────
+    this._heartGroup = this._el('g', { filter: `url(#hbGlow${id})` });
+
+    // Outer heart shape
+    this._heartGroup.appendChild(this._el('path', {
+      d: HEART_PATH,
+      fill: `url(#hbGrad${id})`,
+      stroke: '#7b241c',
+      'stroke-width': '2',
+    }));
+
+    // Chambers — drawn as ellipses at contraction cv=1
+    // LV: cx=-16.8, cy=5.5, rx=16.8, ry=19.25, rotate=-11.5°
+    this._lv = this._el('ellipse', { cx: '-16.8', cy: '5.5', rx: '16.8', ry: '19.25',
+      fill: 'rgba(100,0,0,0.5)', transform: 'rotate(-11.5 -16.8 5.5)' });
+    // RV: cx=13.2, cy=8.25, rx=14.4, ry=16.5, rotate=11.5°
+    this._rv = this._el('ellipse', { cx: '13.2',  cy: '8.25', rx: '14.4', ry: '16.5',
+      fill: 'rgba(120,50,50,0.4)',  transform: 'rotate(11.5 13.2 8.25)' });
+    // LA: cx=-15, cy=-27.5, rx=12, ry=9.9, rotate=-5.7°
+    this._la = this._el('ellipse', { cx: '-15',   cy: '-27.5', rx: '12',   ry: '9.9',
+      fill: 'rgba(180,80,80,0.5)',  transform: 'rotate(-5.7 -15 -27.5)' });
+    // RA: cx=12, cy=-26.4, rx=10.8, ry=8.8, rotate=5.7°
+    this._ra = this._el('ellipse', { cx: '12',    cy: '-26.4', rx: '10.8', ry: '8.8',
+      fill: 'rgba(160,100,100,0.4)', transform: 'rotate(5.7 12 -26.4)' });
+
+    // Interventricular septum line
+    const septum = this._el('line', {
+      x1: '-3', y1: '-12', x2: '1', y2: '36',
+      stroke: 'rgba(80,0,0,0.6)', 'stroke-width': '3',
+    });
+
+    for (const el of [this._lv, this._rv, this._la, this._ra, septum]) {
+      this._heartGroup.appendChild(el);
     }
-    return frames;
-  }
+    svg.appendChild(this._heartGroup);
 
-  /**
-   * Render one heart frame (heart shape + chambers) at a given contraction level.
-   * This is called only during sprite baking, not on every animation tick.
-   */
-  _renderHeartFrame(ctx, c) {
-    const baseW = 120;
-    const baseH = 110;
-    const contractX = 1 - c * 0.18;
-    const contractY = 1 - c * 0.14;
-
-    // Bake the shadow/glow into the frame so drawImage carries it for free
-    if (c > 0.3) {
-      ctx.shadowColor = 'rgba(200,0,0,0.3)';
-      ctx.shadowBlur = 15 * c;
-    }
-
-    ctx.save();
-    ctx.scale(contractX, contractY);
-    this._drawHeartShape(ctx, 0, 0, baseW, baseH);
-    ctx.restore();
-
-    ctx.shadowBlur = 0;
-
-    ctx.save();
-    ctx.scale(contractX, contractY);
-    this._drawChambers(ctx, 0, 0, baseW, baseH, c);
-    ctx.restore();
-  }
-
-  // ─── Animation loop ────────────────────────────────────────────────────────
-
-  _update(dt) {
-    const beatDuration = 60000 / this.bpm;
-    this._phase += dt / beatDuration;
-    if (this._phase >= 1) {
-      this._phase -= 1;
-      this.emit('beat');
-    }
-
-    // Systole: 0..0.35 of cycle  |  Diastole: 0.35..1.0
-    if (this._phase < 0.35) {
-      const t = this._phase / 0.35;
-      const frankStarling = (this.sarcomereLength - 1.6) / 1.0;
-      const strength = this.contractility * (0.5 + 0.5 * frankStarling);
-      this._beatProgress = Math.sin(t * Math.PI) * strength;
-      if (!this._isContracted && t > 0.5) {
-        this._isContracted = true;
-        this.emit('systole');
-      }
-    } else {
-      this._beatProgress *= 0.92;
-      if (this._isContracted && this._phase > 0.6) {
-        this._isContracted = false;
-        this.emit('diastole');
-      }
-    }
-  }
-
-  _draw(ctx) {
-    const { x, y, scale: s } = this;
-
-    // Pick the pre-baked frame nearest to the current contraction level
-    const frameIdx = Math.round(this._beatProgress * (FRAME_COUNT - 1));
-    const frame = this._frames[Math.max(0, Math.min(FRAME_COUNT - 1, frameIdx))];
-
-    // Blit the sprite — no path construction, no bezier math
-    const dw = frame.width * s;
-    const dh = frame.height * s;
-    ctx.drawImage(frame, x - dw / 2, y - dh / 2, dw, dh);
-
-    // Labels are dynamic text — still drawn live on top of the sprite
-    if (this._showLabels) {
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.scale(s, s);
-      this._drawLabels(ctx, 120, 110);
-      ctx.restore();
-    }
-  }
-
-  // ─── Internal drawing helpers (used only during _bakeSprites) ─────────────
-
-  _drawHeartShape(ctx, cx, cy, w, h) {
-    const hw = w / 2;
-    const hh = h / 2;
-
-    ctx.beginPath();
-    ctx.moveTo(cx, cy - hh * 0.15);
-    ctx.bezierCurveTo(cx - hw * 0.1, cy - hh, cx - hw, cy - hh * 0.9, cx - hw, cy - hh * 0.3);
-    ctx.bezierCurveTo(cx - hw, cy + hh * 0.2, cx - hw * 0.3, cy + hh * 0.6, cx, cy + hh);
-    ctx.bezierCurveTo(cx + hw * 0.3, cy + hh * 0.6, cx + hw, cy + hh * 0.2, cx + hw, cy - hh * 0.3);
-    ctx.bezierCurveTo(cx + hw, cy - hh * 0.9, cx + hw * 0.1, cy - hh, cx, cy - hh * 0.15);
-    ctx.closePath();
-
-    const grad = ctx.createLinearGradient(cx - hw, cy - hh, cx + hw, cy + hh);
-    grad.addColorStop(0, '#c0392b');
-    grad.addColorStop(0.5, '#e74c3c');
-    grad.addColorStop(1, '#922b21');
-    ctx.fillStyle = grad;
-    ctx.fill();
-    ctx.strokeStyle = '#7b241c';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-  }
-
-  _drawChambers(ctx, cx, cy, w, h, contraction) {
-    const hw = w / 2;
-    const hh = h / 2;
-    const cv = 1 - contraction * 0.3;
-
-    ctx.save();
-    ctx.beginPath();
-    ctx.ellipse(cx - hw * 0.28, cy + hh * 0.1, hw * 0.28 * cv, hh * 0.35 * cv, -0.2, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(100,0,0,0.5)';
-    ctx.fill();
-    ctx.restore();
-
-    ctx.save();
-    ctx.beginPath();
-    ctx.ellipse(cx + hw * 0.22, cy + hh * 0.15, hw * 0.24 * cv, hh * 0.3 * cv, 0.2, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(120,50,50,0.4)';
-    ctx.fill();
-    ctx.restore();
-
-    ctx.beginPath();
-    ctx.moveTo(cx - hw * 0.05, cy - hh * 0.2);
-    ctx.lineTo(cx + hw * 0.02, cy + hh * 0.6);
-    ctx.strokeStyle = 'rgba(80,0,0,0.6)';
-    ctx.lineWidth = 3;
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.ellipse(cx - hw * 0.25, cy - hh * 0.5, hw * 0.2, hh * 0.18, -0.1, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(180,80,80,0.5)';
-    ctx.fill();
-
-    ctx.beginPath();
-    ctx.ellipse(cx + hw * 0.2, cy - hh * 0.48, hw * 0.18, hh * 0.16, 0.1, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(160,100,100,0.4)';
-    ctx.fill();
-  }
-
-  _drawLabels(ctx, w, h) {
-    const hw = w / 2;
-    const hh = h / 2;
-    ctx.font = '11px sans-serif';
-    ctx.fillStyle = '#fff';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-
+    // ── Labels (drawn on top, outside the scaled group) ───────────────────
+    this._labelGroup = this._el('g', {
+      'font-size': '11', 'font-family': 'sans-serif', fill: '#fff',
+      'text-anchor': 'middle', 'dominant-baseline': 'middle',
+    });
     const labels = [
-      { text: 'LV', x: -hw * 0.28, y: hh * 0.1 },
-      { text: 'RV', x: hw * 0.22, y: hh * 0.15 },
-      { text: 'LA', x: -hw * 0.25, y: -hh * 0.5 },
-      { text: 'RA', x: hw * 0.2, y: -hh * 0.48 },
+      { text: 'LV', x: -16.8, y: 5.5 },
+      { text: 'RV', x: 13.2,  y: 8.25 },
+      { text: 'LA', x: -15,   y: -27.5 },
+      { text: 'RA', x: 12,    y: -26.4 },
     ];
-
-    for (const lbl of labels) {
-      ctx.fillText(lbl.text, lbl.x, lbl.y);
+    for (const { text, x, y } of labels) {
+      const t = this._el('text', { x, y });
+      t.textContent = text;
+      this._labelGroup.appendChild(t);
     }
+    if (!this._showLabels) this._labelGroup.style.display = 'none';
+    svg.appendChild(this._labelGroup);
+  }
+
+  _createTimeline() {
+    // Frank-Starling: sarcomere length adds to contraction depth
+    const frankStarling = (this.sarcomereLength - 1.6) / 1.0;
+    const strength = this.contractility * (0.5 + 0.5 * frankStarling);
+
+    const contractX = 1 - strength * 0.18;
+    const contractY = 1 - strength * 0.14;
+    const chamberScale = 1 - strength * 0.3; // chambers shrink during systole
+    const glowPeak = 12 * strength;
+
+    const beatSec = 60 / this.bpm;       // seconds per beat
+    const systole = beatSec * 0.35;      // 35% of beat
+    const diastole = beatSec * 0.65;     // 65% of beat
+
+    const tl = gsap.timeline({ repeat: -1, onRepeat: () => this.emit('beat') });
+
+    // ── Systole: contract ──────────────────────────────────────────────────
+    tl.to(this._heartGroup, {
+      scaleX: contractX, scaleY: contractY,
+      svgOrigin: '0 0',
+      duration: systole * 0.5,
+      ease: 'power2.in',
+      onStart: () => this.emit('systole'),
+    });
+
+    // Glow ramps up in parallel with contraction
+    tl.to(this._glowBlur, {
+      attr: { stdDeviation: glowPeak },
+      duration: systole * 0.5,
+      ease: 'power2.in',
+    }, '<');
+
+    // ── Relaxation ────────────────────────────────────────────────────────
+    tl.to(this._heartGroup, {
+      scaleX: 1, scaleY: 1,
+      svgOrigin: '0 0',
+      duration: systole * 0.5,
+      ease: 'power2.out',
+      onStart: () => this.emit('diastole'),
+    });
+
+    tl.to(this._glowBlur, {
+      attr: { stdDeviation: 0 },
+      duration: systole * 0.5,
+      ease: 'power2.out',
+    }, '<');
+
+    // ── Diastolic rest ────────────────────────────────────────────────────
+    tl.to({}, { duration: diastole });
+
+    return tl;
   }
 }

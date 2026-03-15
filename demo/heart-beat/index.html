@@ -9,39 +9,30 @@
     body { display: flex; flex-direction: column; align-items: center; background: #1a1a2e; color: #eee; font-family: system-ui, sans-serif; min-height: 100vh; padding: 20px; }
     h1 { font-size: 20px; margin-bottom: 16px; color: #ff8888; }
     .layout { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; justify-content: center; }
-    canvas { border-radius: 8px; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+    #heart-container { border-radius: 8px; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.5); line-height: 0; }
     #controls { min-width: 220px; }
   </style>
 </head>
 <body>
   <h1>Cardiac Cycle Simulation</h1>
   <div class="layout">
-    <canvas id="canvas"></canvas>
+    <div id="heart-container"></div>
     <div id="controls"></div>
   </div>
 
   <script type="module">
-    import { Canvas, Scene } from '../../src/core/Canvas.js';
     import { HeartBeat } from '../../src/examples/HeartBeat.js';
     import { ControlPanel } from '../../src/controls/ControlPanel.js';
     import { Slider } from '../../src/controls/Slider.js';
     import { NumberInput } from '../../src/controls/NumberInput.js';
     import { Toggle } from '../../src/controls/Toggle.js';
     import { Button } from '../../src/controls/Button.js';
-    import { Scene as AnimScene } from '../../src/core/Scene.js';
 
-    // Setup
-    const canvas = new Canvas('#canvas', { width: 500, height: 460 });
-    const scene = new AnimScene(canvas);
-
-    // Heart animation
-    const heart = new HeartBeat(canvas, { bpm: 72, sarcomereLength: 2.2 });
-    heart.on('systole', () => statusEl.textContent = 'Systole (contraction)');
+    // Heart animation (SVG + GSAP — no canvas needed)
+    const heart = new HeartBeat('#heart-container', { bpm: 72, sarcomereLength: 2.2 });
+    heart.on('systole',  () => statusEl.textContent = 'Systole (contraction)');
     heart.on('diastole', () => statusEl.textContent = 'Diastole (relaxation)');
-
-    scene.add(heart);
     heart.play();
-    scene.start();
 
     // Status display
     const statusEl = document.createElement('div');
@@ -87,7 +78,7 @@
 
     panel.add(new Button({
       label: 'Pause / Resume',
-      onClick: () => heart._running ? heart.pause() : heart.play()
+      onClick: () => heart._tl?.paused() ? heart.play() : heart.pause()
     }));
 
     panel.mount();

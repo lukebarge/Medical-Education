@@ -3,6 +3,7 @@ export { EventEmitter } from './core/EventEmitter.js';
 export { Canvas } from './core/Canvas.js';
 export { Renderer } from './core/Renderer.js';
 export { Animation } from './core/Animation.js';
+export { SvgAnimation } from './core/SvgAnimation.js';
 export { Tween, Easing } from './core/Tween.js';
 export { Timeline } from './core/Timeline.js';
 export { Scene } from './core/Scene.js';
