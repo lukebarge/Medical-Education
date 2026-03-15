@@ -3,27 +3,37 @@
    ============================================= */
 
 // Navigation structure
+// Resolve base path so nav links work both on GitHub Pages (/Medical-Education/)
+// and on a local dev server (/).
+const _base = (() => {
+  const parts = window.location.pathname.split('/');
+  const docsIdx = parts.indexOf('docs');
+  if (docsIdx !== -1) return parts.slice(0, docsIdx).join('/') + '/docs';
+  // fallback: assume served from repo root
+  return '/docs';
+})();
+
 const NAV = [
   {
     section: 'Getting Started',
     items: [
-      { label: 'Introduction', href: '/docs/index.html', icon: '◎' },
+      { label: 'Introduction', href: `${_base}/index.html`, icon: '◎' },
     ]
   },
   {
     section: 'Physiology',
     items: [
-      { label: 'Cardiac Cycle',     href: '/docs/physiology/heart-beat.html',      icon: '♥' },
-      { label: 'Breathing',         href: '/docs/physiology/breathing.html',        icon: '🫁' },
-      { label: 'Blood Flow',        href: '/docs/physiology/blood-flow.html',       icon: '⟳' },
-      { label: 'Action Potential',  href: '/docs/physiology/action-potential.html', icon: '⚡' },
+      { label: 'Cardiac Cycle',     href: `${_base}/physiology/heart-beat.html`,      icon: '♥' },
+      { label: 'Breathing',         href: `${_base}/physiology/breathing.html`,        icon: '🫁' },
+      { label: 'Blood Flow',        href: `${_base}/physiology/blood-flow.html`,       icon: '⟳' },
+      { label: 'Action Potential',  href: `${_base}/physiology/action-potential.html`, icon: '⚡' },
     ]
   },
   {
     section: 'Pharmacology',
     items: [
-      { label: 'Drug Absorption',    href: '/docs/pharmacology/drug-absorption.html',  icon: '◈' },
-      { label: 'Pharmacokinetics',   href: '/docs/pharmacology/pharmacokinetics.html', icon: '≈' },
+      { label: 'Drug Absorption',    href: `${_base}/pharmacology/drug-absorption.html`,  icon: '◈' },
+      { label: 'Pharmacokinetics',   href: `${_base}/pharmacology/pharmacokinetics.html`, icon: '≈' },
     ]
   }
 ];
