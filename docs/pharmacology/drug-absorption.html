@@ -159,7 +159,6 @@
   <script src="../assets/app.js"></script>
   <script type="module">
     import { Canvas } from '../../src/core/Canvas.js';
-    import { Scene } from '../../src/core/Scene.js';
     import { DrugAbsorption } from '../../src/examples/DrugAbsorption.js';
     import { ControlPanel } from '../../src/controls/ControlPanel.js';
     import { Slider } from '../../src/controls/Slider.js';
@@ -167,12 +166,9 @@
     import { Button } from '../../src/controls/Button.js';
 
     const canvas = new Canvas('#canvas', { width: 580, height: 380 });
-    const scene = new Scene(canvas);
 
     let da = new DrugAbsorption(canvas, { route: 'oral', dose: 500, absorptionRate: 1.0 });
-    scene.add(da);
     da.play();
-    scene.start();
 
     const panel = new ControlPanel('#controls', { title: 'Absorption Parameters', theme: 'dark' });
 

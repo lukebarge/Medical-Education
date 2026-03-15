@@ -162,19 +162,15 @@
   <script src="../assets/app.js"></script>
   <script type="module">
     import { Canvas } from '../../src/core/Canvas.js';
-    import { Scene } from '../../src/core/Scene.js';
     import { Breathing } from '../../src/examples/Breathing.js';
     import { ControlPanel } from '../../src/controls/ControlPanel.js';
     import { Slider } from '../../src/controls/Slider.js';
     import { Toggle } from '../../src/controls/Toggle.js';
 
     const canvas = new Canvas('#canvas', { width: 440, height: 400 });
-    const scene = new Scene(canvas);
 
     const breath = new Breathing(canvas, { rate: 14, tidalVolume: 0.5, airwayResistance: 0.3 });
-    scene.add(breath);
     breath.play();
-    scene.start();
 
     const panel = new ControlPanel('#controls', { title: 'Respiratory Parameters', theme: 'dark' });
 

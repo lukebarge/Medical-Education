@@ -173,7 +173,6 @@
   <script src="../assets/app.js"></script>
   <script type="module">
     import { Canvas } from '../../src/core/Canvas.js';
-    import { Scene } from '../../src/core/Scene.js';
     import { HeartBeat } from '../../src/examples/HeartBeat.js';
     import { ControlPanel } from '../../src/controls/ControlPanel.js';
     import { Slider } from '../../src/controls/Slider.js';
@@ -182,12 +181,9 @@
     import { Button } from '../../src/controls/Button.js';
 
     const canvas = new Canvas('#canvas', { width: 420, height: 400 });
-    const scene = new Scene(canvas);
 
     const heart = new HeartBeat(canvas, { bpm: 72, sarcomereLength: 2.2, contractility: 0.7 });
-    scene.add(heart);
     heart.play();
-    scene.start();
 
     const panel = new ControlPanel('#controls', { title: 'Cardiac Parameters', theme: 'dark' });
 

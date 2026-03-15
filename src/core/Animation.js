@@ -102,6 +102,7 @@ export class Animation extends EventEmitter {
     const dt = this._lastTimestamp === null ? 0 : (timestamp - this._lastTimestamp);
     this._lastTimestamp = timestamp;
 
+    this.canvas.clear();
     this._update(dt * this.speed, timestamp);
     this._draw(this.ctx);
     this.emit('frame', timestamp);

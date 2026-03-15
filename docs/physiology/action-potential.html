@@ -166,7 +166,6 @@
   <script src="../assets/app.js"></script>
   <script type="module">
     import { Canvas } from '../../src/core/Canvas.js';
-    import { Scene } from '../../src/core/Scene.js';
     import { ActionPotential } from '../../src/examples/ActionPotential.js';
     import { ControlPanel } from '../../src/controls/ControlPanel.js';
     import { Slider } from '../../src/controls/Slider.js';
@@ -175,14 +174,11 @@
     import { Button } from '../../src/controls/Button.js';
 
     const canvas = new Canvas('#canvas', { width: 620, height: 380 });
-    const scene = new Scene(canvas);
 
     const ap = new ActionPotential(canvas, {
       threshold: -55, conductionVelocity: 1, autoFire: true, autoFireInterval: 1500
     });
-    scene.add(ap);
     ap.play();
-    scene.start();
 
     const panel = new ControlPanel('#controls', { title: 'Electrophysiology Parameters', theme: 'dark' });
 
