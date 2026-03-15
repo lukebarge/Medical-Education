@@ -1,9 +1,21 @@
 import { Animation } from '../core/Animation.js';
-import { Renderer } from '../core/Renderer.js';
+
+// Number of pre-baked contraction frames (0 = relaxed, N-1 = fully contracted)
+const FRAME_COUNT = 64;
+// Offscreen frame dimensions (large enough for heart + max shadow blur)
+const FRAME_W = 160;
+const FRAME_H = 150;
+// Heart center within each frame
+const FC_X = FRAME_W / 2;
+const FC_Y = FRAME_H / 2;
 
 /**
  * Heart beat animation showing the cardiac cycle (systole and diastole).
- * Draws a schematic heart cross-section that contracts and relaxes.
+ *
+ * Uses a game-dev sprite approach: all FRAME_COUNT heart frames are rendered
+ * once at init into OffscreenCanvas objects. Every animation tick just calls
+ * ctx.drawImage() to blit the right frame — no bezier curves rebuilt at runtime.
+ * Dynamic overlays (labels) are still drawn live on top.
  *
  * Parameters:
  *   - bpm: beats per minute (40–200)
@@ -39,9 +51,12 @@ export class HeartBeat extends Animation {
     this.scale = params.scale !== undefined ? params.scale : 1;
 
     // Internal animation state
-    this._phase = 0;      // 0..1 within one beat cycle
-    this._beatProgress = 0;  // contraction amount 0..1
+    this._phase = 0;
+    this._beatProgress = 0;
     this._isContracted = false;
+
+    // Pre-bake all heart frames into OffscreenCanvases once
+    this._frames = this._bakeSprites();
   }
 
   setBPM(bpm) {
@@ -66,7 +81,6 @@ export class HeartBeat extends Animation {
   }
 
   triggerArrhythmia() {
-    // Temporarily double BPM for 3 beats then restore
     const originalBPM = this.bpm;
     this.setBPM(this.bpm * 2.5);
     setTimeout(() => this.setBPM(originalBPM), 3000);
@@ -79,8 +93,58 @@ export class HeartBeat extends Animation {
     this._beatProgress = 0;
   }
 
+  // ─── Sprite baking (runs once at init) ────────────────────────────────────
+
+  /**
+   * Pre-render every contraction level to an OffscreenCanvas.
+   * Returns an array of FRAME_COUNT OffscreenCanvas objects.
+   */
+  _bakeSprites() {
+    const frames = [];
+    for (let i = 0; i < FRAME_COUNT; i++) {
+      const contraction = i / (FRAME_COUNT - 1); // 0..1
+      const oc = new OffscreenCanvas(FRAME_W, FRAME_H);
+      const ctx = oc.getContext('2d');
+      ctx.translate(FC_X, FC_Y);
+      this._renderHeartFrame(ctx, contraction);
+      frames.push(oc);
+    }
+    return frames;
+  }
+
+  /**
+   * Render one heart frame (heart shape + chambers) at a given contraction level.
+   * This is called only during sprite baking, not on every animation tick.
+   */
+  _renderHeartFrame(ctx, c) {
+    const baseW = 120;
+    const baseH = 110;
+    const contractX = 1 - c * 0.18;
+    const contractY = 1 - c * 0.14;
+
+    // Bake the shadow/glow into the frame so drawImage carries it for free
+    if (c > 0.3) {
+      ctx.shadowColor = 'rgba(200,0,0,0.3)';
+      ctx.shadowBlur = 15 * c;
+    }
+
+    ctx.save();
+    ctx.scale(contractX, contractY);
+    this._drawHeartShape(ctx, 0, 0, baseW, baseH);
+    ctx.restore();
+
+    ctx.shadowBlur = 0;
+
+    ctx.save();
+    ctx.scale(contractX, contractY);
+    this._drawChambers(ctx, 0, 0, baseW, baseH, c);
+    ctx.restore();
+  }
+
+  // ─── Animation loop ────────────────────────────────────────────────────────
+
   _update(dt) {
-    const beatDuration = 60000 / this.bpm; // ms per beat
+    const beatDuration = 60000 / this.bpm;
     this._phase += dt / beatDuration;
     if (this._phase >= 1) {
       this._phase -= 1;
@@ -90,8 +154,7 @@ export class HeartBeat extends Animation {
     // Systole: 0..0.35 of cycle  |  Diastole: 0.35..1.0
     if (this._phase < 0.35) {
       const t = this._phase / 0.35;
-      // Frank-Starling: longer sarcomere → more forceful contraction
-      const frankStarling = (this.sarcomereLength - 1.6) / 1.0; // 0..1
+      const frankStarling = (this.sarcomereLength - 1.6) / 1.0;
       const strength = this.contractility * (0.5 + 0.5 * frankStarling);
       this._beatProgress = Math.sin(t * Math.PI) * strength;
       if (!this._isContracted && t > 0.5) {
@@ -99,7 +162,7 @@ export class HeartBeat extends Animation {
         this.emit('systole');
       }
     } else {
-      this._beatProgress *= 0.92; // relax
+      this._beatProgress *= 0.92;
       if (this._isContracted && this._phase > 0.6) {
         this._isContracted = false;
         this.emit('diastole');
@@ -108,45 +171,28 @@ export class HeartBeat extends Animation {
   }
 
   _draw(ctx) {
-    const { x, y, scale } = this;
-    const c = this._beatProgress; // contraction factor
-    const s = scale;
+    const { x, y, scale: s } = this;
 
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.scale(s, s);
+    // Pick the pre-baked frame nearest to the current contraction level
+    const frameIdx = Math.round(this._beatProgress * (FRAME_COUNT - 1));
+    const frame = this._frames[Math.max(0, Math.min(FRAME_COUNT - 1, frameIdx))];
 
-    const baseW = 120;
-    const baseH = 110;
-    const contractX = 1 - c * 0.18;
-    const contractY = 1 - c * 0.14;
+    // Blit the sprite — no path construction, no bezier math
+    const dw = frame.width * s;
+    const dh = frame.height * s;
+    ctx.drawImage(frame, x - dw / 2, y - dh / 2, dw, dh);
 
-    // Shadow/glow during systole
-    if (c > 0.3) {
-      ctx.shadowColor = 'rgba(200,0,0,0.3)';
-      ctx.shadowBlur = 15 * c;
-    }
-
-    // Draw heart outline using bezier curves
-    ctx.save();
-    ctx.scale(contractX, contractY);
-    this._drawHeartShape(ctx, 0, 0, baseW, baseH);
-    ctx.restore();
-    ctx.shadowBlur = 0;
-
-    // Internal chambers
-    ctx.save();
-    ctx.scale(contractX, contractY);
-    this._drawChambers(ctx, 0, 0, baseW, baseH, c);
-    ctx.restore();
-
-    // Labels
+    // Labels are dynamic text — still drawn live on top of the sprite
     if (this._showLabels) {
-      this._drawLabels(ctx, baseW, baseH);
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(s, s);
+      this._drawLabels(ctx, 120, 110);
+      ctx.restore();
     }
-
-    ctx.restore();
   }
+
+  // ─── Internal drawing helpers (used only during _bakeSprites) ─────────────
 
   _drawHeartShape(ctx, cx, cy, w, h) {
     const hw = w / 2;
@@ -154,10 +200,8 @@ export class HeartBeat extends Animation {
 
     ctx.beginPath();
     ctx.moveTo(cx, cy - hh * 0.15);
-    // Left lobe
     ctx.bezierCurveTo(cx - hw * 0.1, cy - hh, cx - hw, cy - hh * 0.9, cx - hw, cy - hh * 0.3);
     ctx.bezierCurveTo(cx - hw, cy + hh * 0.2, cx - hw * 0.3, cy + hh * 0.6, cx, cy + hh);
-    // Right side
     ctx.bezierCurveTo(cx + hw * 0.3, cy + hh * 0.6, cx + hw, cy + hh * 0.2, cx + hw, cy - hh * 0.3);
     ctx.bezierCurveTo(cx + hw, cy - hh * 0.9, cx + hw * 0.1, cy - hh, cx, cy - hh * 0.15);
     ctx.closePath();
@@ -178,7 +222,6 @@ export class HeartBeat extends Animation {
     const hh = h / 2;
     const cv = 1 - contraction * 0.3;
 
-    // Left ventricle (bottom left)
     ctx.save();
     ctx.beginPath();
     ctx.ellipse(cx - hw * 0.28, cy + hh * 0.1, hw * 0.28 * cv, hh * 0.35 * cv, -0.2, 0, Math.PI * 2);
@@ -186,7 +229,6 @@ export class HeartBeat extends Animation {
     ctx.fill();
     ctx.restore();
 
-    // Right ventricle (bottom right)
     ctx.save();
     ctx.beginPath();
     ctx.ellipse(cx + hw * 0.22, cy + hh * 0.15, hw * 0.24 * cv, hh * 0.3 * cv, 0.2, 0, Math.PI * 2);
@@ -194,7 +236,6 @@ export class HeartBeat extends Animation {
     ctx.fill();
     ctx.restore();
 
-    // Septum
     ctx.beginPath();
     ctx.moveTo(cx - hw * 0.05, cy - hh * 0.2);
     ctx.lineTo(cx + hw * 0.02, cy + hh * 0.6);
@@ -202,13 +243,11 @@ export class HeartBeat extends Animation {
     ctx.lineWidth = 3;
     ctx.stroke();
 
-    // Left atrium (top left)
     ctx.beginPath();
     ctx.ellipse(cx - hw * 0.25, cy - hh * 0.5, hw * 0.2, hh * 0.18, -0.1, 0, Math.PI * 2);
     ctx.fillStyle = 'rgba(180,80,80,0.5)';
     ctx.fill();
 
-    // Right atrium (top right)
     ctx.beginPath();
     ctx.ellipse(cx + hw * 0.2, cy - hh * 0.48, hw * 0.18, hh * 0.16, 0.1, 0, Math.PI * 2);
     ctx.fillStyle = 'rgba(160,100,100,0.4)';
