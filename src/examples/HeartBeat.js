@@ -1,17 +1,14 @@
 import gsap from 'gsap';
 import { SvgAnimation } from '../core/SvgAnimation.js';
+import heartSvgRaw from '../../anatomical-heart-svgrepo-com.svg?raw';
 
 // Unique ID counter so multiple instances don't share SVG defs IDs
 let _uid = 0;
 
-// Heart bezier path — coordinates match the original Canvas implementation
-// (hw=60, hh=55, center at 0,0)
-const HEART_PATH =
-  'M 0,-8.25 ' +
-  'C -6,-55 -60,-49.5 -60,-16.5 ' +
-  'C -60,11 -18,33 0,55 ' +
-  'C 18,33 60,11 60,-16.5 ' +
-  'C 60,-49.5 6,-55 0,-8.25 Z';
+// Parse the anatomical heart SVG once at module load time
+const _heartSvgEl = new DOMParser()
+  .parseFromString(heartSvgRaw, 'image/svg+xml')
+  .documentElement;
 
 /**
  * Heart beat animation — SVG + GSAP implementation.
@@ -91,24 +88,11 @@ export class HeartBeat extends SvgAnimation {
   _setup(svg) {
     const id = ++_uid;
 
-    // viewBox centres the heart (hw=60, hh=55) with room for glow
-    svg.setAttribute('viewBox', '-85 -75 170 150');
+    // The anatomical SVG has viewBox "0 0 36 36"; translate by (-18,-18) centres it at origin.
+    svg.setAttribute('viewBox', '-20 -20 40 40');
 
-    // ── Defs ──────────────────────────────────────────────────────────────
+    // ── Defs — glow filter only ────────────────────────────────────────────
     const defs = this._el('defs');
-
-    // Linear gradient — dark red → red → darker red
-    const lg = this._el('linearGradient', {
-      id: `hbGrad${id}`,
-      x1: '-1', y1: '-1', x2: '1', y2: '1',
-      gradientUnits: 'objectBoundingBox',
-    });
-    lg.appendChild(this._el('stop', { offset: '0%',   'stop-color': '#c0392b' }));
-    lg.appendChild(this._el('stop', { offset: '50%',  'stop-color': '#e74c3c' }));
-    lg.appendChild(this._el('stop', { offset: '100%', 'stop-color': '#922b21' }));
-    defs.appendChild(lg);
-
-    // Drop-shadow filter for systolic glow
     const filter = this._el('filter', { id: `hbGlow${id}`, x: '-30%', y: '-30%', width: '160%', height: '160%' });
     this._glowBlur = this._el('feGaussianBlur', { in: 'SourceGraphic', stdDeviation: '0', result: 'blur' });
     const merge = this._el('feMerge');
@@ -117,55 +101,30 @@ export class HeartBeat extends SvgAnimation {
     filter.appendChild(this._glowBlur);
     filter.appendChild(merge);
     defs.appendChild(filter);
-
     svg.appendChild(defs);
 
     // ── Heart group (scaled during beat) ──────────────────────────────────
     this._heartGroup = this._el('g', { filter: `url(#hbGlow${id})` });
 
-    // Outer heart shape
-    this._heartGroup.appendChild(this._el('path', {
-      d: HEART_PATH,
-      fill: `url(#hbGrad${id})`,
-      stroke: '#7b241c',
-      'stroke-width': '2',
-    }));
-
-    // Chambers — drawn as ellipses at contraction cv=1
-    // LV: cx=-16.8, cy=5.5, rx=16.8, ry=19.25, rotate=-11.5°
-    this._lv = this._el('ellipse', { cx: '-16.8', cy: '5.5', rx: '16.8', ry: '19.25',
-      fill: 'rgba(100,0,0,0.5)', transform: 'rotate(-11.5 -16.8 5.5)' });
-    // RV: cx=13.2, cy=8.25, rx=14.4, ry=16.5, rotate=11.5°
-    this._rv = this._el('ellipse', { cx: '13.2',  cy: '8.25', rx: '14.4', ry: '16.5',
-      fill: 'rgba(120,50,50,0.4)',  transform: 'rotate(11.5 13.2 8.25)' });
-    // LA: cx=-15, cy=-27.5, rx=12, ry=9.9, rotate=-5.7°
-    this._la = this._el('ellipse', { cx: '-15',   cy: '-27.5', rx: '12',   ry: '9.9',
-      fill: 'rgba(180,80,80,0.5)',  transform: 'rotate(-5.7 -15 -27.5)' });
-    // RA: cx=12, cy=-26.4, rx=10.8, ry=8.8, rotate=5.7°
-    this._ra = this._el('ellipse', { cx: '12',    cy: '-26.4', rx: '10.8', ry: '8.8',
-      fill: 'rgba(160,100,100,0.4)', transform: 'rotate(5.7 12 -26.4)' });
-
-    // Interventricular septum line
-    const septum = this._el('line', {
-      x1: '-3', y1: '-12', x2: '1', y2: '36',
-      stroke: 'rgba(80,0,0,0.6)', 'stroke-width': '3',
-    });
-
-    for (const el of [this._lv, this._rv, this._la, this._ra, septum]) {
-      this._heartGroup.appendChild(el);
+    // Clone all child nodes from the parsed anatomical SVG, centred at origin
+    const inner = this._el('g', { transform: 'translate(-18 -18)' });
+    for (const child of _heartSvgEl.childNodes) {
+      inner.appendChild(child.cloneNode(true));
     }
+    this._heartGroup.appendChild(inner);
     svg.appendChild(this._heartGroup);
 
-    // ── Labels (drawn on top, outside the scaled group) ───────────────────
+    // ── Labels (positioned on the anatomical heart, in centred coordinates) ─
     this._labelGroup = this._el('g', {
-      'font-size': '11', 'font-family': 'sans-serif', fill: '#fff',
+      'font-size': '2.5', 'font-family': 'sans-serif', fill: '#fff',
       'text-anchor': 'middle', 'dominant-baseline': 'middle',
+      'pointer-events': 'none',
     });
     const labels = [
-      { text: 'LV', x: -16.8, y: 5.5 },
-      { text: 'RV', x: 13.2,  y: 8.25 },
-      { text: 'LA', x: -15,   y: -27.5 },
-      { text: 'RA', x: 12,    y: -26.4 },
+      { text: 'LV', x: -8,  y:  4 },
+      { text: 'RV', x:  5,  y:  4 },
+      { text: 'LA', x: -8,  y: -8 },
+      { text: 'RA', x:  5,  y: -8 },
     ];
     for (const { text, x, y } of labels) {
       const t = this._el('text', { x, y });
@@ -183,7 +142,6 @@ export class HeartBeat extends SvgAnimation {
 
     const contractX = 1 - strength * 0.18;
     const contractY = 1 - strength * 0.14;
-    const chamberScale = 1 - strength * 0.3; // chambers shrink during systole
     const glowPeak = 12 * strength;
 
     const beatSec = 60 / this.bpm;       // seconds per beat
